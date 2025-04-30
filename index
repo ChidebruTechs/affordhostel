@@ -21,58 +21,76 @@
     </header>
 
     <main class="container mx-auto p-4">
-        <section id="landlord" class="bg-white p-6 rounded shadow">
-            <h2 class="text-xl font-semibold mb-4">Landlord Dashboard</h2>
+        <!-- Landlord Section -->
+        <section id="landlord" class="bg-white p-6 rounded shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Landlord Portal</h2>
 
             <!-- Landlord Login -->
-            <div id="login-section" class="mb-6">
+            <div id="landlord-login-section" class="mb-6">
                 <h3 class="text-lg font-medium mb-2">Login</h3>
-                <input id="landlord-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
+                <input id="landlord-phone" type="tel" placeholder="Phone Number (e.g., +2547XXXXXXXX)" class="border p-2 mb-2 w-full">
                 <input id="landlord-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
                 <button onclick="loginLandlord()" class="bg-blue-600 text-white p-2 rounded">Login</button>
                 <button onclick="showRegisterForm()" class="bg-green-600 text-white p-2 rounded ml-2">Register</button>
             </div>
 
             <!-- Landlord Registration -->
-            <div id="register-section" class="hidden mb-6">
+            <div id="landlord-register-section" class="hidden mb-6">
                 <h3 class="text-lg font-medium mb-2">Register</h3>
-                <input id="reg-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
-                <input id="reg-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
-                <input id="reg-name" type="text" placeholder="Full Name" class="border p-2 mb-2 w-full">
-                <button onclick="registerLandlord()" class="bg-green-600 text-white p-2 rounded">Register</button>
+                <input id="reg-phone" type="tel" placeholder="Phone Number (e.g., +2547XXXXXXXX)" class="border p-2 mb-2 w-full">
+                <button onclick="sendOTP()" class="bg-blue-600 text-white p-2 rounded">Send OTP</button>
+                <div id="otp-section" class="hidden mt-2">
+                    <input id="otp-input" type="text" placeholder="Enter OTP" class="border p-2 mb-2 w-full">
+                    <input id="reg-password" type="password" placeholder="Create Password" class="border p-2 mb-2 w-full">
+                    <input id="reg-name" type="text" placeholder="Full Name" class="border p-2 mb-2 w-full">
+                    <button onclick="verifyOTPAndRegister()" class="bg-green-600 text-white p-2 rounded">Complete Registration</button>
+                </div>
             </div>
 
-            <!-- Landlord Dashboard (Hidden until logged in) -->
+            <!-- Landlord Dashboard (Hidden until logged in and verified) -->
             <div id="landlord-dashboard" class="hidden">
-                <!-- Add Hostel -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Add Hostel</h3>
-                    <input id="hostel-name" type="text" placeholder="Hostel Name" class="border p-2 mb-2 w-full">
-                    <input id="hostel-units" type="number" placeholder="Number of Units/Doors" class="border p-2 mb-2 w-full">
-                    <input id="hostel-price" type="number" placeholder="Price per Unit (KES)" class="border p-2 mb-2 w-full">
-                    <div class="mb-2">
-                        <label class="block">Location</label>
-                        <input id="hostel-coordinates" type="text" placeholder="Coordinates (e.g., -1.2921, 36.8219)" class="border p-2 mb-2 w-full">
-                        <button onclick="getCurrentLocation()" class="bg-blue-600 text-white p-2 rounded">Use Current Location</button>
-                    </div>
-                    <button onclick="addHostel()" class="bg-blue-600 text-white p-2 rounded">Add Hostel</button>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium">Welcome, <span id="landlord-name"></span></h3>
+                    <button onclick="logoutLandlord()" class="bg-red-600 text-white p-2 rounded">Logout</button>
+                </div>
+                <div id="admin-pending" class="hidden text-yellow-600 mb-4">Your account is pending admin verification.</div>
+
+                <!-- Landlord Tabs -->
+                <div class="border-b mb-4">
+                    <ul class="flex space-x-4">
+                        <li><button onclick="showTab('home')" class="tab-button px-4 py-2 border-b-2 border-transparent hover:border-blue-600">Home</button></li>
+                        <li><button onclick="showTab('bookings')" class="tab-button px-4 py-2 border-b-2 border-transparent hover:border-blue-600">Bookings</button></li>
+                        <li><button onclick="showTab('manage')" class="tab-button px-4 py-2 border-b-2 border-transparent hover:border-blue-600">Manage</button></li>
+                        <li><button onclick="showTab('reports')" class="tab-button px-4 py-2 border-b-2 border-transparent hover:border-blue-600">Reports</button></li>
+                    </ul>
                 </div>
 
-                <!-- Hostel List -->
-                <div id="hostel-list" class="mb-6">
+                <!-- Tab Content -->
+                <div id="home" class="tab-content">
                     <h3 class="text-lg font-medium mb-2">Your Hostels</h3>
-                    <ul id="hostel-list-ul" class="space-y-2"></ul>
+                    <ul id="hostel-list" class="space-y-2"></ul>
                 </div>
-
-                <!-- Bookings -->
-                <div id="bookings" class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Student Bookings</h3>
+                <div id="bookings" class="tab-content hidden">
+                    <h3 class="text-lg font-medium mb-2">Manage Bookings</h3>
                     <ul id="bookings-list" class="space-y-2"></ul>
                 </div>
-
-                <!-- Reports -->
-                <div id="reports" class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Generate Reports</h3>
+                <div id="manage" class="tab-content hidden">
+                    <h3 class="text-lg font-medium mb-2">Manage Hostels</h3>
+                    <!-- Add Hostel -->
+                    <div class="mb-6">
+                        <input id="hostel-name" type="text" placeholder="Hostel Name" class="border p-2 mb-2 w-full">
+                        <input id="hostel-units" type="number" placeholder="Number of Units/Doors" class="border p-2 mb-2 w-full">
+                        <input id="hostel-price" type="number" placeholder="Price per Unit (KES)" class="border p-2 mb-2 w-full">
+                        <div class="mb-2">
+                            <input id="hostel-coordinates" type="text" placeholder="Coordinates (e.g., -1.2921, 36.8219)" class="border p-2 mb-2 w-full">
+                            <button onclick="getCurrentLocation()" class="bg-blue-600 text-white p-2 rounded">Use Current Location</button>
+                        </div>
+                        <button onclick="addHostel()" class="bg-blue-600 text-white p-2 rounded">Add Hostel</button>
+                    </div>
+                    <ul id="manage-hostel-list" class="space-y-2"></ul>
+                </div>
+                <div id="reports" class="tab-content hidden">
+                    <h3 class="text-lg font-medium mb-2">Reports</h3>
                     <select id="report-type" class="border p-2 mb-2">
                         <option value="occupancy">Occupancy Report</option>
                         <option value="revenue">Revenue Report</option>
@@ -83,52 +101,128 @@
                 </div>
             </div>
         </section>
+
+        <!-- Student Section -->
+        <section id="student" class="bg-white p-6 rounded shadow">
+            <h2 class="text-xl font-semibold mb-4">Student Portal</h2>
+            <div class="flex space-x-4 mb-6">
+                <button onclick="showStudentLogin()" class="bg-blue-600 text-white p-2 rounded">Login</button>
+                <button onclick="showStudentRegister()" class="bg-green-600 text-white p-2 rounded">Register</button>
+                <button onclick="browseHostels()" class="bg-gray-600 text-white p-2 rounded">Browse Hostels</button>
+            </div>
+
+            <!-- Student Login -->
+            <div id="student-login" class="hidden mb-6">
+                <h3 class="text-lg font-medium mb-2">Student Login</h3>
+                <input id="student-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
+                <input id="student-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
+                <button onclick="loginStudent()" class="bg-blue-600 text-white p-2 rounded">Login</button>
+            </div>
+
+            <!-- Student Registration -->
+            <div id="student-register" class="hidden mb-6">
+                <h3 class="text-lg font-medium mb-2">Student Register</h3>
+                <input id="student-reg-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
+                <input id="student-reg-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
+                <input id="student-reg-name" type="text" placeholder="Full Name" class="border p-2 mb-2 w-full">
+                <button onclick="registerStudent()" class="bg-green-600 text-white p-2 rounded">Register</button>
+            </div>
+
+            <!-- Browse Hostels -->
+            <div id="hostel-browse">
+                <h3 class="text-lg font-medium mb-2">Available Hostels</h3>
+                <ul id="hostel-browse-list" class="space-y-2"></ul>
+            </div>
+        </section>
     </main>
 
     <script>
         let currentLandlord = null;
-        let hostels = [];
-        let bookings = [];
-
-        // Simulated landlord database (replace with backend API)
+        let currentStudent = null;
+        let hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
         let landlords = JSON.parse(localStorage.getItem('landlords')) || [];
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let otp = null;
 
         function showRegisterForm() {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('register-section').classList.remove('hidden');
+            document.getElementById('landlord-login-section').classList.add('hidden');
+            document.getElementById('landlord-register-section').classList.remove('hidden');
         }
 
-        function registerLandlord() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const name = document.getElementById('reg-name').value;
-
-            if (landlords.find(l => l.email === email)) {
-                alert('Email already registered!');
+        function sendOTP() {
+            const phone = document.getElementById('reg-phone').value;
+            if (!phone.match(/^\+2547[0-9]{8}$/)) {
+                alert('Please enter a valid Kenyan phone number (e.g., +2547XXXXXXXX)');
                 return;
             }
 
-            landlords.push({ email, password, name });
+            // Simulated OTP generation and sending (replace with backend API)
+            otp = Math.floor(100000 + Math.random() * 900000).toString();
+            alert(`OTP sent to ${phone}: ${otp}`); // Replace with actual SMS API
+            document.getElementById('otp-section').classList.remove('hidden');
+        }
+
+        function verifyOTPAndRegister() {
+            const inputOTP = document.getElementById('otp-input').value;
+            const phone = document.getElementById('reg-phone').value;
+            const password = document.getElementById('reg-password').value;
+            const name = document.getElementById('reg-name').value;
+
+            if (inputOTP !== otp) {
+                alert('Invalid OTP');
+                return;
+            }
+
+            if (landlords.find(l => l.phone === phone)) {
+                alert('Phone number already registered!');
+                return;
+            }
+
+            landlords.push({ phone, password, name, isVerified: false });
             localStorage.setItem('landlords', JSON.stringify(landlords));
-            alert('Registration successful! Please login.');
-            document.getElementById('register-section').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
+            alert('Registration successful! Awaiting admin verification.');
+            document.getElementById('landlord-register-section').classList.add('hidden');
+            document.getElementById('landlord-login-section').classList.remove('hidden');
         }
 
         function loginLandlord() {
-            const email = document.getElementById('landlord-email').value;
+            const phone = document.getElementById('landlord-phone').value;
             const password = document.getElementById('landlord-password').value;
 
-            const landlord = landlords.find(l => l.email === email && l.password === password);
+            const landlord = landlords.find(l => l.phone === phone && l.password === password);
             if (landlord) {
+                if (!landlord.isVerified) {
+                    alert('Your account is pending admin verification.');
+                    document.getElementById('landlord-dashboard').classList.remove('hidden');
+                    document.getElementById('admin-pending').classList.remove('hidden');
+                    document.getElementById('landlord-login-section').classList.add('hidden');
+                    return;
+                }
                 currentLandlord = landlord;
-                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('landlord-name').textContent = landlord.name;
+                document.getElementById('landlord-login-section').classList.add('hidden');
                 document.getElementById('landlord-dashboard').classList.remove('hidden');
+                document.getElementById('admin-pending').classList.add('hidden');
+                showTab('home');
                 loadHostels();
                 loadBookings();
             } else {
-                alert('Invalid email or password');
+                alert('Invalid phone number or password');
             }
+        }
+
+        function logoutLandlord() {
+            currentLandlord = null;
+            document.getElementById('landlord-dashboard').classList.add('hidden');
+            document.getElementById('landlord-login-section').classList.remove('hidden');
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('border-blue-600'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('border-blue-600');
         }
 
         function getCurrentLocation() {
@@ -148,6 +242,10 @@
         }
 
         function addHostel() {
+            if (!currentLandlord.isVerified) {
+                alert('Your account is not verified by admin.');
+                return;
+            }
             const name = document.getElementById('hostel-name').value;
             const units = parseInt(document.getElementById('hostel-units').value);
             const price = parseInt(document.getElementById('hostel-price').value);
@@ -168,7 +266,7 @@
                     doorNumber: i + 1,
                     isAvailable: true
                 })),
-                landlordEmail: currentLandlord.email
+                landlordPhone: currentLandlord.phone
             };
 
             hostels.push(hostel);
@@ -185,27 +283,44 @@
         }
 
         function loadHostels() {
-            hostels = JSON.parse(localStorage.getItem('hostels')) || [];
-            const hostelList = document.getElementById('hostel-list-ul');
+            if (!currentLandlord) return;
+            const hostelList = document.getElementById('hostel-list');
+            const manageHostelList = document.getElementById('manage-hostel-list');
             hostelList.innerHTML = '';
+            manageHostelList.innerHTML = '';
 
             hostels
-                .filter(h => h.landlordEmail === currentLandlord.email)
+                .filter(h => h.landlordPhone === currentLandlord.phone)
                 .forEach(hostel => {
+                    // Home Tab
                     const li = document.createElement('li');
                     li.className = 'border p-2';
                     li.innerHTML = `
                         <div><strong>${hostel.name}</strong> (Units: ${hostel.units}, Price: KES ${hostel.price})</div>
                         <div>Coordinates: ${hostel.coordinates}</div>
                         <div>Available Doors: ${hostel.doors.filter(d => d.isAvailable).map(d => d.doorNumber).join(', ') || 'None'}</div>
+                    `;
+                    hostelList.appendChild(li);
+
+                    // Manage Tab
+                    const manageLi = document.createElement('li');
+                    manageLi.className = 'border p-2';
+                    manageLi.innerHTML = `
+                        <div><strong>${hostel.name}</strong> (Units: ${hostel.units}, Price: KES ${hostel.price})</div>
+                        <div>Coordinates: ${hostel.coordinates}</div>
+                        <div>Available Doors: ${hostel.doors.filter(d => d.isAvailable).map(d => d.doorNumber).join(', ') || 'None'}</div>
                         <button onclick="editHostel(${hostel.id})" class="bg-yellow-600 text-white p-1 rounded mt-2">Edit</button>
                         <button onclick="manageAvailability(${hostel.id})" class="bg-blue-600 text-white p-1 rounded mt-2 ml-2">Manage Availability</button>
                     `;
-                    hostelList.appendChild(li);
+                    manageHostelList.appendChild(manageLi);
                 });
         }
 
         function editHostel(hostelId) {
+            if (!currentLandlord.isVerified) {
+                alert('Your account is not verified by admin.');
+                return;
+            }
             const hostel = hostels.find(h => h.id === hostelId);
             if (!hostel) return;
 
@@ -223,6 +338,10 @@
         }
 
         function manageAvailability(hostelId) {
+            if (!currentLandlord.isVerified) {
+                alert('Your account is not verified by admin.');
+                return;
+            }
             const hostel = hostels.find(h => h.id === hostelId);
             if (!hostel) return;
 
@@ -244,13 +363,12 @@
         }
 
         function loadBookings() {
-            // Simulated bookings (replace with backend API)
-            bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            if (!currentLandlord) return;
             const bookingsList = document.getElementById('bookings-list');
             bookingsList.innerHTML = '';
 
             bookings
-                .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordPhone === currentLandlord.phone))
                 .forEach(booking => {
                     const hostel = hostels.find(h => h.id === booking.hostelId);
                     const li = document.createElement('li');
@@ -266,34 +384,103 @@
         }
 
         function generateReport() {
+            if (!currentLandlord.isVerified) {
+                alert('Your account is not verified by admin.');
+                return;
+            }
             const reportType = document.getElementById('report-type').value;
             const reportOutput = document.getElementById('report-output');
             reportOutput.innerHTML = '';
 
             if (reportType === 'occupancy') {
                 const occupied = hostels
-                    .filter(h => h.landlordEmail === currentLandlord.email)
+                    .filter(h => h.landlordPhone === currentLandlord.phone)
                     .reduce((sum, h) => sum + h.doors.filter(d => !d.isAvailable).length, 0);
                 const total = hostels
-                    .filter(h => h.landlordEmail === currentLandlord.email)
+                    .filter(h => h.landlordPhone === currentLandlord.phone)
                     .reduce((sum, h) => sum + h.doors.length, 0);
                 reportOutput.innerHTML = `Occupancy: ${occupied}/${total} units occupied`;
             } else if (reportType === 'revenue') {
                 const revenue = bookings
-                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordPhone === currentLandlord.phone))
                     .reduce((sum, b) => sum + b.amount, 0);
                 reportOutput.innerHTML = `Total Revenue: KES ${revenue}`;
             } else if (reportType === 'bookings') {
                 const count = bookings
-                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordPhone === currentLandlord.phone))
                     .length;
                 reportOutput.innerHTML = `Total Bookings: ${count}`;
             }
         }
 
+        // Student Functions
+        function showStudentLogin() {
+            document.getElementById('student-login').classList.remove('hidden');
+            document.getElementById('student-register').classList.add('hidden');
+            document.getElementById('hostel-browse').classList.add('hidden');
+        }
+
+        function showStudentRegister() {
+            document.getElementById('student-register').classList.remove('hidden');
+            document.getElementById('student-login').classList.add('hidden');
+            document.getElementById('hostel-browse').classList.add('hidden');
+        }
+
+        function browseHostels() {
+            document.getElementById('student-login').classList.add('hidden');
+            document.getElementById('student-register').classList.add('hidden');
+            document.getElementById('hostel-browse').classList.remove('hidden');
+            loadBrowseHostels();
+        }
+
+        function registerStudent() {
+            const email = document.getElementById('student-reg-email').value;
+            const password = document.getElementById('student-reg-password').value;
+            const name = document.getElementById('student-reg-name').value;
+
+            if (students.find(s => s.email === email)) {
+                alert('Email already registered!');
+                return;
+            }
+
+            students.push({ email, password, name });
+            localStorage.setItem('students', JSON.stringify(students));
+            alert('Registration successful! Please login.');
+            showStudentLogin();
+        }
+
+        function loginStudent() {
+            const email = document.getElementById('student-email').value;
+            const password = document.getElementById('student-password').value;
+
+            const student = students.find(s => s.email === email && s.password === password);
+            if (student) {
+                currentStudent = student;
+                alert('Login successful!');
+                browseHostels();
+            } else {
+                alert('Invalid email or password');
+            }
+        }
+
+        function loadBrowseHostels() {
+            const browseList = document.getElementById('hostel-browse-list');
+            browseList.innerHTML = '';
+
+            hostels.forEach(hostel => {
+                const li = document.createElement('li');
+                li.className = 'border p-2';
+                li.innerHTML = `
+                    <div><strong>${hostel.name}</strong> (Price: KES ${hostel.price}/unit)</div>
+                    <div>Location: ${hostel.coordinates}</div>
+                    <div>Available Doors: ${hostel.doors.filter(d => d.isAvailable).map(d => d.doorNumber).join(', ') || 'None'}</div>
+                `;
+                browseList.appendChild(li);
+            });
+        }
+
         // Initialize
-        hostels = JSON.parse(localStorage.getItem('hostels')) || [];
-        bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        loadBrowseHostels();
     </script>
 </body>
 </html>
