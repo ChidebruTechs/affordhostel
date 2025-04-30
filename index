@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Booking Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-blue-600 text-white p-4">
+        <h1 class="text-2xl font-bold">Hostel Booking Portal</h1>
+        <nav class="mt-2">
+            <ul class="flex space-x-4">
+                <li><a href="#student" class="hover:underline">Student</a></li>
+                <li><a href="#agent" class="hover:underline">Agent</a></li>
+                <li><a href="#landlord" class="hover:underline">Landlord</a></li>
+                <li><a href="#admin" class="hover:underline">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4">
+        <section id="landlord" class="bg-white p-6 rounded shadow">
+            <h2 class="text-xl font-semibold mb-4">Landlord Dashboard</h2>
+
+            <!-- Landlord Login -->
+            <div id="login-section" class="mb-6">
+                <h3 class="text-lg font-medium mb-2">Login</h3>
+                <input id="landlord-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
+                <input id="landlord-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
+                <button onclick="loginLandlord()" class="bg-blue-600 text-white p-2 rounded">Login</button>
+                <button onclick="showRegisterForm()" class="bg-green-600 text-white p-2 rounded ml-2">Register</button>
+            </div>
+
+            <!-- Landlord Registration -->
+            <div id="register-section" class="hidden mb-6">
+                <h3 class="text-lg font-medium mb-2">Register</h3>
+                <input id="reg-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
+                <input id="reg-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
+                <input id="reg-name" type="text" placeholder="Full Name" class="border p-2 mb-2 w-full">
+                <button onclick="registerLandlord()" class="bg-green-600 text-white p-2 rounded">Register</button>
+            </div>
+
+            <!-- Landlord Dashboard (Hidden until logged in) -->
+            <div id="landlord-dashboard" class="hidden">
+                <!-- Add Hostel -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium mb-2">Add Hostel</h3>
+                    <input id="hostel-name" type="text" placeholder="Hostel Name" class="border p-2 mb-2 w-full">
+                    <input id="hostel-units" type="number" placeholder="Number of Units/Doors" class="border p-2 mb-2 w-full">
+                    <input id="hostel-price" type="number" placeholder="Price per Unit (KES)" class="border p-2 mb-2 w-full">
+                    <div class="mb-2">
+                        <label class="block">Location</label>
+                        <input id="hostel-coordinates" type="text" placeholder="Coordinates (e.g., -1.2921, 36.8219)" class="border p-2 mb-2 w-full">
+                        <button onclick="getCurrentLocation()" class="bg-blue-600 text-white p-2 rounded">Use Current Location</button>
+                    </div>
+                    <button onclick="addHostel()" class="bg-blue-600 text-white p-2 rounded">Add Hostel</button>
+                </div>
+
+                <!-- Hostel List -->
+                <div id="hostel-list" class="mb-6">
+                    <h3 class="text-lg font-medium mb-2">Your Hostels</h3>
+                    <ul id="hostel-list-ul" class="space-y-2"></ul>
+                </div>
+
+                <!-- Bookings -->
+                <div id="bookings" class="mb-6">
+                    <h3 class="text-lg font-medium mb-2">Student Bookings</h3>
+                    <ul id="bookings-list" class="space-y-2"></ul>
+                </div>
+
+                <!-- Reports -->
+                <div id="reports" class="mb-6">
+                    <h3 class="text-lg font-medium mb-2">Generate Reports</h3>
+                    <select id="report-type" class="border p-2 mb-2">
+                        <option value="occupancy">Occupancy Report</option>
+                        <option value="revenue">Revenue Report</option>
+                        <option value="bookings">Bookings Report</option>
+                    </select>
+                    <button onclick="generateReport()" class="bg-blue-600 text-white p-2 rounded">Generate</button>
+                    <div id="report-output" class="mt-2"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentLandlord = null;
+        let hostels = [];
+        let bookings = [];
+
+        // Simulated landlord database (replace with backend API)
+        let landlords = JSON.parse(localStorage.getItem('landlords')) || [];
+
+        function showRegisterForm() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('register-section').classList.remove('hidden');
+        }
+
+        function registerLandlord() {
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const name = document.getElementById('reg-name').value;
+
+            if (landlords.find(l => l.email === email)) {
+                alert('Email already registered!');
+                return;
+            }
+
+            landlords.push({ email, password, name });
+            localStorage.setItem('landlords', JSON.stringify(landlords));
+            alert('Registration successful! Please login.');
+            document.getElementById('register-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+        }
+
+        function loginLandlord() {
+            const email = document.getElementById('landlord-email').value;
+            const password = document.getElementById('landlord-password').value;
+
+            const landlord = landlords.find(l => l.email === email && l.password === password);
+            if (landlord) {
+                currentLandlord = landlord;
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('landlord-dashboard').classList.remove('hidden');
+                loadHostels();
+                loadBookings();
+            } else {
+                alert('Invalid email or password');
+            }
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
+                        document.getElementById('hostel-coordinates').value = coords;
+                    },
+                    error => {
+                        alert('Error getting location: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function addHostel() {
+            const name = document.getElementById('hostel-name').value;
+            const units = parseInt(document.getElementById('hostel-units').value);
+            const price = parseInt(document.getElementById('hostel-price').value);
+            const coordinates = document.getElementById('hostel-coordinates').value;
+
+            if (!name || !units || !price || !coordinates) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const hostel = {
+                id: Date.now(),
+                name,
+                units,
+                price,
+                coordinates,
+                doors: Array.from({ length: units }, (_, i) => ({
+                    doorNumber: i + 1,
+                    isAvailable: true
+                })),
+                landlordEmail: currentLandlord.email
+            };
+
+            hostels.push(hostel);
+            localStorage.setItem('hostels', JSON.stringify(hostels));
+            loadHostels();
+            clearHostelForm();
+        }
+
+        function clearHostelForm() {
+            document.getElementById('hostel-name').value = '';
+            document.getElementById('hostel-units').value = '';
+            document.getElementById('hostel-price').value = '';
+            document.getElementById('hostel-coordinates').value = '';
+        }
+
+        function loadHostels() {
+            hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+            const hostelList = document.getElementById('hostel-list-ul');
+            hostelList.innerHTML = '';
+
+            hostels
+                .filter(h => h.landlordEmail === currentLandlord.email)
+                .forEach(hostel => {
+                    const li = document.createElement('li');
+                    li.className = 'border p-2';
+                    li.innerHTML = `
+                        <div><strong>${hostel.name}</strong> (Units: ${hostel.units}, Price: KES ${hostel.price})</div>
+                        <div>Coordinates: ${hostel.coordinates}</div>
+                        <div>Available Doors: ${hostel.doors.filter(d => d.isAvailable).map(d => d.doorNumber).join(', ') || 'None'}</div>
+                        <button onclick="editHostel(${hostel.id})" class="bg-yellow-600 text-white p-1 rounded mt-2">Edit</button>
+                        <button onclick="manageAvailability(${hostel.id})" class="bg-blue-600 text-white p-1 rounded mt-2 ml-2">Manage Availability</button>
+                    `;
+                    hostelList.appendChild(li);
+                });
+        }
+
+        function editHostel(hostelId) {
+            const hostel = hostels.find(h => h.id === hostelId);
+            if (!hostel) return;
+
+            const newName = prompt('Enter new hostel name:', hostel.name);
+            const newPrice = prompt('Enter new price (KES):', hostel.price);
+            const newCoordinates = prompt('Enter new coordinates:', hostel.coordinates);
+
+            if (newName && newPrice && newCoordinates) {
+                hostel.name = newName;
+                hostel.price = parseInt(newPrice);
+                hostel.coordinates = newCoordinates;
+                localStorage.setItem('hostels', JSON.stringify(hostels));
+                loadHostels();
+            }
+        }
+
+        function manageAvailability(hostelId) {
+            const hostel = hostels.find(h => h.id === hostelId);
+            if (!hostel) return;
+
+            let doorList = 'Available Doors:\n';
+            hostel.doors.forEach(door => {
+                doorList += `Door ${door.doorNumber}: ${door.isAvailable ? 'Available' : 'Occupied'}\n`;
+            });
+
+            const doorNumber = prompt(`${doorList}\nEnter door number to toggle availability:`);
+            const door = hostel.doors.find(d => d.doorNumber === parseInt(doorNumber));
+
+            if (door) {
+                door.isAvailable = !door.isAvailable;
+                localStorage.setItem('hostels', JSON.stringify(hostels));
+                loadHostels();
+            } else {
+                alert('Invalid door number');
+            }
+        }
+
+        function loadBookings() {
+            // Simulated bookings (replace with backend API)
+            bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const bookingsList = document.getElementById('bookings-list');
+            bookingsList.innerHTML = '';
+
+            bookings
+                .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                .forEach(booking => {
+                    const hostel = hostels.find(h => h.id === booking.hostelId);
+                    const li = document.createElement('li');
+                    li.className = 'border p-2';
+                    li.innerHTML = `
+                        <div>Student: ${booking.studentName}</div>
+                        <div>Hostel: ${hostel.name}</div>
+                        <div>Door: ${booking.doorNumber}</div>
+                        <div>Amount: KES ${booking.amount}</div>
+                    `;
+                    bookingsList.appendChild(li);
+                });
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const reportOutput = document.getElementById('report-output');
+            reportOutput.innerHTML = '';
+
+            if (reportType === 'occupancy') {
+                const occupied = hostels
+                    .filter(h => h.landlordEmail === currentLandlord.email)
+                    .reduce((sum, h) => sum + h.doors.filter(d => !d.isAvailable).length, 0);
+                const total = hostels
+                    .filter(h => h.landlordEmail === currentLandlord.email)
+                    .reduce((sum, h) => sum + h.doors.length, 0);
+                reportOutput.innerHTML = `Occupancy: ${occupied}/${total} units occupied`;
+            } else if (reportType === 'revenue') {
+                const revenue = bookings
+                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                    .reduce((sum, b) => sum + b.amount, 0);
+                reportOutput.innerHTML = `Total Revenue: KES ${revenue}`;
+            } else if (reportType === 'bookings') {
+                const count = bookings
+                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
+                    .length;
+                reportOutput.innerHTML = `Total Bookings: ${count}`;
+            }
+        }
+
+        // Initialize
+        hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+        bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+    </script>
+</body>
+</html>
