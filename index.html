@@ -3,297 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hostel Booking Portal</title>
+    <title>Off Campus Hostel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
-    <header class="bg-blue-600 text-white p-4">
-        <h1 class="text-2xl font-bold">Hostel Booking Portal</h1>
-        <nav class="mt-2">
-            <ul class="flex space-x-4">
-                <li><a href="#student" class="hover:underline">Student</a></li>
-                <li><a href="#agent" class="hover:underline">Agent</a></li>
-                <li><a href="#landlord" class="hover:underline">Landlord</a></li>
-                <li><a href="#admin" class="hover:underline">Admin</a></li>
-            </ul>
-        </nav>
+    <header class="bg-blue-600 text-white py-6 text-center">
+        <h1 class="text-3xl font-bold">Off Campus Hostel Booking Portal</h1>
     </header>
 
-    <main class="container mx-auto p-4">
-        <section id="landlord" class="bg-white p-6 rounded shadow">
-            <h2 class="text-xl font-semibold mb-4">Landlord Dashboard</h2>
+    <div class="container mx-auto p-6">
+        <!-- Main Tab Navigation -->
+        <div class="flex border-b border-gray-200">
+            <button class="tab-button px-4 py-2 text-blue-600 border-b-2 border-blue-600" data-tab="student">Student</button>
+            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="agent">Agent</button>
+            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="landlord">Landlord</button>
+            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="admin">Admin</button>
+        </div>
 
-            <!-- Landlord Login -->
-            <div id="login-section" class="mb-6">
-                <h3 class="text-lg font-medium mb-2">Login</h3>
-                <input id="landlord-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
-                <input id="landlord-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
-                <button onclick="loginLandlord()" class="bg-blue-600 text-white p-2 rounded">Login</button>
-                <button onclick="showRegisterForm()" class="bg-green-600 text-white p-2 rounded ml-2">Register</button>
-            </div>
-
-            <!-- Landlord Registration -->
-            <div id="register-section" class="hidden mb-6">
-                <h3 class="text-lg font-medium mb-2">Register</h3>
-                <input id="reg-email" type="email" placeholder="Email" class="border p-2 mb-2 w-full">
-                <input id="reg-password" type="password" placeholder="Password" class="border p-2 mb-2 w-full">
-                <input id="reg-name" type="text" placeholder="Full Name" class="border p-2 mb-2 w-full">
-                <button onclick="registerLandlord()" class="bg-green-600 text-white p-2 rounded">Register</button>
-            </div>
-
-            <!-- Landlord Dashboard (Hidden until logged in) -->
-            <div id="landlord-dashboard" class="hidden">
-                <!-- Add Hostel -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Add Hostel</h3>
-                    <input id="hostel-name" type="text" placeholder="Hostel Name" class="border p-2 mb-2 w-full">
-                    <input id="hostel-units" type="number" placeholder="Number of Units/Doors" class="border p-2 mb-2 w-full">
-                    <input id="hostel-price" type="number" placeholder="Price per Unit (KES)" class="border p-2 mb-2 w-full">
-                    <div class="mb-2">
-                        <label class="block">Location</label>
-                        <input id="hostel-coordinates" type="text" placeholder="Coordinates (e.g., -1.2921, 36.8219)" class="border p-2 mb-2 w-full">
-                        <button onclick="getCurrentLocation()" class="bg-blue-600 text-white p-2 rounded">Use Current Location</button>
+        <!-- Main Tab Content -->
+        <div id="tab-content" class="mt-6">
+            <!-- Student Tab -->
+            <div id="student" class="tab-pane">
+                <div id="student-login" class="max-w-md mx-auto hidden">
+                    <h3 class="text-xl font-medium mb-2">Student Login</h3>
+                    <div class="space-y-4">
+                        <input type="tel" id="student-login-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                        <input type="password" id="student-login-password" placeholder="Password" class="w-full p-2 border rounded">
+                        <button onclick="login('student')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
                     </div>
-                    <button onclick="addHostel()" class="bg-blue-600 text-white p-2 rounded">Add Hostel</button>
                 </div>
-
-                <!-- Hostel List -->
-                <div id="hostel-list" class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Your Hostels</h3>
-                    <ul id="hostel-list-ul" class="space-y-2"></ul>
-                </div>
-
-                <!-- Bookings -->
-                <div id="bookings" class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Student Bookings</h3>
-                    <ul id="bookings-list" class="space-y-2"></ul>
-                </div>
-
-                <!-- Reports -->
-                <div id="reports" class="mb-6">
-                    <h3 class="text-lg font-medium mb-2">Generate Reports</h3>
-                    <select id="report-type" class="border p-2 mb-2">
-                        <option value="occupancy">Occupancy Report</option>
-                        <option value="revenue">Revenue Report</option>
-                        <option value="bookings">Bookings Report</option>
-                    </select>
-                    <button onclick="generateReport()" class="bg-blue-600 text-white p-2 rounded">Generate</button>
-                    <div id="report-output" class="mt-2"></div>
+                <div id="student-content" class="hidden">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="logout('student')" class="text-red-600 hover:text-red-700">Logout</button>
+                    </div>
+                    <h2 class="text-2xl font-semibold mb-4">Student Portal</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Create Account</h3>
+                            <div class="space-y-4">
+                                <input type="text" id="student-name" placeholder="Full Name" class="w-full p-2 border rounded">
+                                <input type="tel" id="student-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                                <input type="password" id="student-password" placeholder="Password" class="w-full p-2 border rounded">
+                                <button onclick="createStudentAccount()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sign Up</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Browse Hostels</h3>
+                            <div class="space-y-4 mb-4">
+                                <div>
+                                    <label for="location-filter" class="block text-gray-700 mb-1">Filter by Location:</label>
+                                    <select id="location-filter" onchange="filterHostels()" class="w-full p-2 border rounded">
+                                        <option value="all">All Locations</option>
+                                        <option value="niles">Niles</option>
+                                        <option value="market">Market</option>
+                                        <option value="nyawita">Nyawita</option>
+                                        <option value="mabungo">Mabungo</option>
+                                        <option value="vikam">Vikam</option>
+                                        <option value="daily-nation">Daily Nation</option>
+                                        <option value="green-valley">Green Valley (GV)</option>
+                                        <option value="lwanda">Lwanda</option>
+                                        <option value="lela">Lela</option>
+                                        <option value="space">Space</option>
+                                        <option value="kefri">KEFRI</option>
+                                        <option value="ebusakami">Ebusakami</option>
+                                    </select>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <div>
+                                        <label for="price-from" class="block text-gray-700 mb-1">Price From (KSH):</label>
+                                        <input type="number" id="price-from" placeholder="e.g., 15000" class="w-full p-2 border rounded" onchange="filterHostels()">
+                                    </div>
+                                    <div>
+                                        <label for="price-to" class="block text-gray-700 mb-1">Price To (KSH):</label>
+                                        <input type="number" id="price-to" placeholder="e.g., 50000" class="w-full p-2 border rounded" onchange="filterHostels()">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="house-type" class="block text-gray-700 mb-1">House Type:</label>
+                                    <select id="house-type" onchange="filterHostels()" class="w-full p-2 border rounded">
+                                        <option value="all">All Types</option>
+                                        <option value="single-room">Single Room</option>
+                                        <option value="bed-seater">Bed Seater</option>
+                                        <option value="one-bedroom">One Bedroom</option>
+                                        <option value="two-bedroom">Two Bedroom</option>
+                                        <option value="three-bedroom">Three Bedroom</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="hostel-list" class="space-y-2">
+                                <div class="hostel-item" data-location="niles" data-price="15000" data-type="single-room">
+                                    <p class="text-gray-700">Niles Hostel - KSH 15,000/month, Niles, Single Room</p>
+                                    <a href="https://www.google.com/maps?q=-0.091702,34.767956" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="market" data-price="18000" data-type="bed-seater">
+                                    <p class="text-gray-700">Market Hostel - KSH 18,000/month, Market, Bed Seater</p>
+                                    <a href="https://www.google.com/maps?q=-0.092000,34.768500" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="nyawita" data-price="25000" data-type="one-bedroom">
+                                    <p class="text-gray-700">Nyawita Hostel - KSH 25,000/month, Nyawita, One Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.090500,34.766800" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="mabungo" data-price="35000" data-type="two-bedroom">
+                                    <p class="text-gray-700">Mabungo Hostel - KSH 35,000/month, Mabungo, Two Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.093000,34.769000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="vikam" data-price="45000" data-type="three-bedroom">
+                                    <p class="text-gray-700">Vikam Hostel - KSH 45,000/month, Vikam, Three Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.089000,34.765000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="daily-nation" data-price="20000" data-type="single-room">
+                                    <p class="text-gray-700">Daily Nation Hostel - KSH 20,000/month, Daily Nation, Single Room</p>
+                                    <a href="https://www.google.com/maps?q=-0.094000,34.770000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="green-valley" data-price="22000" data-type="bed-seater">
+                                    <p class="text-gray-700">Green Valley Hostel - KSH 22,000/month, Green Valley (GV), Bed Seater</p>
+                                    <a href="https://www.google.com/maps?q=-0.088000,34.764000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="lwanda" data-price="27000" data-type="one-bedroom">
+                                    <p class="text-gray-700">Lwanda Hostel - KSH 27,000/month, Lwanda, One Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.095000,34.771000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="lela" data-price="38000" data-type="two-bedroom">
+                                    <p class="text-gray-700">Lela Hostel - KSH 38,000/month, Lela, Two Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.087000,34.763000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="space" data-price="48000" data-type="three-bedroom">
+                                    <p class="text-gray-700">Space Hostel - KSH 48,000/month, Space, Three Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.096000,34.772000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="kefri" data-price="16000" data-type="single-room">
+                                    <p class="text-gray-700">KEFRI Hostel - KSH 16,000/month, KEFRI, Single Room</p>
+                                    <a href="https://www.google.com/maps?q=-0.086000,34.762000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                                <div class="hostel-item" data-location="ebusakami" data-price="30000" data-type="one-bedroom">
+                                    <p class="text-gray-700">Ebusakami Hostel - KSH 30,000/month, Ebusakami, One Bedroom</p>
+                                    <a href="https://www.google.com/maps?q=-0.097000,34.773000" target="_blank" class="text-blue-600 hover:underline">View on Map</a>
+                                </div>
+                            </div>
+                            <button onclick="browseHostels()" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">View More</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
-    </main>
+
+            <!-- Agent Tab -->
+            <div id="agent" class="tab-pane hidden">
+                <div id="agent-login" class="max-w-md mx-auto">
+                    <h3 class="text-xl font-medium mb-2">Agent Login</h3>
+                    <div class="space-y-4">
+                        <input type="tel" id="agent-login-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                        <input type="password" id="agent-login-password" placeholder="Password" class="w-full p-2 border rounded">
+                        <button onclick="login('agent')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+                    </div>
+                </div>
+                <div id="agent-content" class="hidden">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="logout('agent')" class="text-red-600 hover:text-red-700">Logout</button>
+                    </div>
+                    <h2 class="text-2xl font-semibold mb-4">Agent Dashboard</h2>
+                    <p class="text-gray-700 mb-4">Manage hostel listings and bookings.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Add New Hostel</h3>
+                            <input type="text" placeholder="Hostel Name" class="w-full p-2 border rounded mb-2">
+                            <select class="w-full p-2 border rounded mb-2">
+                                <option value="">Select Location</option>
+                                <option value="niles">Niles</option>
+                                <option value="market">Market</option>
+                                <option value="nyawita">Nyawita</option>
+                                <option value="mabungo">Mabungo</option>
+                                <option value="vikam">Vikam</option>
+                                <option value="daily-nation">Daily Nation</option>
+                                <option value="green-valley">Green Valley (GV)</option>
+                                <option value="lwanda">Lwanda</option>
+                                <option value="lela">Lela</option>
+                                <option value="space">Space</option>
+                                <option value="kefri">KEFRI</option>
+                                <option value="ebusakami">Ebusakami</option>
+                            </select>
+                            <input type="tel" placeholder="Agent Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded mb-2">
+                            <button onclick="addHostel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Hostel</button>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">View Bookings</h3>
+                            <p class="text-gray-700">Booking 1: Student A - Niles Hostel, KSH 15,000/month</p>
+                            <p class="text-gray-700">Booking 2: Student B - Nyawita Hostel, KSH 25,000/month</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Landlord Tab -->
+            <div id="landlord" class="tab-pane hidden">
+                <div id="landlord-login" class="max-w-md mx-auto">
+                    <h3 class="text-xl font-medium mb-2">Landlord Login</h3>
+                    <div class="space-y-4">
+                        <input type="tel" id="landlord-login-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                        <input type="password" id="landlord-login-password" placeholder="Password" class="w-full p-2 border rounded">
+                        <button onclick="login('landlord')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+                    </div>
+                </div>
+                <div id="landlord-content" class="hidden">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="logout('landlord')" class="text-red-600 hover:text-red-700">Logout</button>
+                    </div>
+                    <h2 class="text-2xl font-semibold mb-4">Landlord Portal</h2>
+                    <!-- Landlord Sub-Tabs -->
+                    <div class="flex border-b border-gray-200 mb-4">
+                        <button class="subtab-button px-4 py-2 text-blue-600 border-b-2 border-blue-600" data-subtab="landlord-home">Home</button>
+                        <button class="subtab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-subtab="bookings">Bookings</button>
+                        <button class="subtab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-subtab="manage">Manage</button>
+                        <button class="subtab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-subtab="reports">Reports</button>
+                    </div>
+                    <!-- Landlord Sub-Tab Content -->
+                    <div id="subtab-content">
+                        <div id="landlord-home" class="subtab-pane">
+                            <h3 class="text-xl font-medium mb-2">Create Landlord Account</h3>
+                            <div class="space-y-4 max-w-md">
+                                <input type="tel" id="landlord-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                                <select id="landlord-location" class="w-full p-2 border rounded">
+                                    <option value="">Select Location</option>
+                                    <option value="niles">Niles</option>
+                                    <option value="market">Market</option>
+                                    <option value="nyawita">Nyawita</option>
+                                    <option value="mabungo">Mabungo</option>
+                                    <option value="vikam">Vikam</option>
+                                    <option value="daily-nation">Daily Nation</option>
+                                    <option value="green-valley">Green Valley (GV)</option>
+                                    <option value="lwanda">Lwanda</option>
+                                    <option value="lela">Lela</option>
+                                    <option value="space">Space</option>
+                                    <option value="kefri">KEFRI</option>
+                                    <option value="ebusakami">Ebusakami</option>
+                                </select>
+                                <input type="text" id="landlord-coordinates" placeholder="Coordinates (e.g., -0.091702, 34.767956)" class="w-full p-2 border rounded">
+                                <button onclick="sendOTP()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Send OTP</button>
+                                <input type="text" id="otp" placeholder="Enter OTP" class="w-full p-2 border rounded">
+                                <input type="password" id="landlord-password" placeholder="Set Password" class="w-full p-2 border rounded">
+                                <button onclick="verifyOTP()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Verify & Create Account</button>
+                            </div>
+                        </div>
+                        <div id="bookings" class="subtab-pane hidden">
+                            <h3 class="text-xl font-medium mb-2">Manage Bookings</h3>
+                            <p class="text-gray-700">Booking: Student X - Room 101, KSH 15,000/month</p>
+                            <p class="text-gray-700">Booking: Student Y - Room 102, KSH 25,000/month</p>
+                        </div>
+                        <div id="manage" class="subtab-pane hidden">
+                            <h3 class="text-xl font-medium mb-2">Manage Hostels</h3>
+                            <p class="text-gray-700">Niles Hostel: 5 rooms available</p>
+                            <p class="text-gray-700">Nyawita Hostel: 3 rooms available</p>
+                            <button onclick="updateHostel()" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Update</button>
+                            <div class="mt-4">
+                                <h4 class="text-lg font-medium mb-2">Upload Media (Max 4 files)</h4>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="use-camera" onchange="toggleCamera()" class="mr-2">
+                                        Use Camera
+                                    </label>
+                                    <input type="file" id="media-upload" accept="image/*,video/*" multiple class="w-full p-2 border rounded" onchange="handleMediaUpload()">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="reports" class="subtab-pane hidden">
+                            <h3 class="text-xl font-medium mb-2">Reports</h3>
+                            <p class="text-gray-700">Total Revenue: KSH 580,500</p>
+                            <p class="text-gray-700">Occupancy Rate: 80%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Tab -->
+            <div id="admin" class="tab-pane hidden">
+                <div id="admin-login" class="max-w-md mx-auto">
+                    <h3 class="text-xl font-medium mb-2">Admin Login</h3>
+                    <div class="space-y-4">
+                        <input type="tel" id="admin-login-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                        <input type="password" id="admin-login-password" placeholder="Password" class="w-full p-2 border rounded">
+                        <button onclick="login('admin')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+                    </div>
+                </div>
+                <div id="admin-content" class="hidden">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="logout('admin')" class="text-red-600 hover:text-red-700">Logout</button>
+                    </div>
+                    <h2 class="text-2xl font-semibold mb-4">Admin Panel</h2>
+                    <p class="text-gray-700 mb-4">Verify landlords and manage hostels.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Pending Landlord Verifications</h3>
+                            <p class="text-gray-700">Landlord A - Phone: +254123456789, Location: Niles</p>
+                            <button onclick="verifyLandlord()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Approve</button>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-medium mb-2">Hostel Verification</h3>
+                            <p budowy: 1 class="text-gray-700">Hostel: Niles Hostel - Coordinates: (-0.091702, 34.767956)</p>
+                            <button onclick="verifyHostel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Verify</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white text-center py-4">
+        <p>© 2025 Off Campus Hostel. All rights reserved.</p>
+    </footer>
 
     <script>
-        let currentLandlord = null;
-        let hostels = [];
-        let bookings = [];
+        // Login State
+        const loginStates = {
+            student: false,
+            agent: false,
+            landlord: false,
+            admin: false
+        };
 
-        // Simulated landlord database (replace with backend API)
-        let landlords = JSON.parse(localStorage.getItem('landlords')) || [];
-
-        function showRegisterForm() {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('register-section').classList.remove('hidden');
+        // Initialize Tab Visibility
+        function initializeTabs() {
+            const tabs = ['student', 'agent', 'landlord', 'admin'];
+            tabs.forEach(tab => {
+                const loginDiv = document.getElementById(`${tab}-login`);
+                const contentDiv = document.getElementById(`${tab}-content`);
+                if (loginStates[tab]) {
+                    loginDiv.classList.add('hidden');
+                    contentDiv.classList.remove('hidden');
+                } else {
+                    loginDiv.classList.remove('hidden');
+                    contentDiv.classList.add('hidden');
+                }
+            });
         }
 
-        function registerLandlord() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const name = document.getElementById('reg-name').value;
+        initializeTabs();
 
-            if (landlords.find(l => l.email === email)) {
-                alert('Email already registered!');
+        // Main Tab Switching
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-600', 'hover:text-blue-600');
+                });
+                button.classList.add('text-blue-600', 'border-blue-600');
+                button.classList.remove('text-gray-600', 'hover:text-blue-600');
+
+                tabPanes.forEach(pane => pane.classList.add('hidden'));
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        // Landlord Sub-Tab Switching
+        const subtabButtons = document.querySelectorAll('.subtab-button');
+        const subtabPanes = document.querySelectorAll('.subtab-pane');
+
+        subtabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                subtabButtons.forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-600', 'hover:text-blue-600');
+                });
+                button.classList.add('text-blue-600', 'border-blue-600');
+                button.classList.remove('text-gray-600', 'hover:text-blue-600');
+
+                subtabPanes.forEach(pane => pane.classList.add('hidden'));
+                const subtabId = button.getAttribute('data-subtab');
+                document.getElementById(subtabId).classList.remove('hidden');
+            });
+        });
+
+        // Filter Hostels
+        function filterHostels() {
+            const locationFilter = document.getElementById('location-filter').value;
+            const priceFrom = parseFloat(document.getElementById('price-from').value) || 0;
+            const priceTo = parseFloat(document.getElementById('price-to').value) || Infinity;
+            const houseType = document.getElementById('house-type').value;
+            const hostelItems = document.querySelectorAll('.hostel-item');
+
+            hostelItems.forEach(item => {
+                const location = item.getAttribute('data-location');
+                const price = parseFloat(item.getAttribute('data-price'));
+                const type = item.getAttribute('data-type');
+                const matchesLocation = locationFilter === 'all' || location === locationFilter;
+                const matchesPrice = price >= priceFrom && price <= priceTo;
+                const matchesType = houseType === 'all' || type === houseType;
+                if (matchesLocation && matchesPrice && matchesType) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle Camera Input
+        function toggleCamera() {
+            const useCamera = document.getElementById('use-camera').checked;
+            const mediaInput = document.getElementById('media-upload');
+            if (useCamera) {
+                mediaInput.setAttribute('capture', 'environment');
+            } else {
+                mediaInput.removeAttribute('capture');
+            }
+        }
+
+        // Handle Media Upload
+        function handleMediaUpload() {
+            const files = document.getElementById('media-upload').files;
+            if (files.length > 4) {
+                alert('You can upload a maximum of 4 files.');
+                document.getElementById('media-upload').value = '';
                 return;
             }
-
-            landlords.push({ email, password, name });
-            localStorage.setItem('landlords', JSON.stringify(landlords));
-            alert('Registration successful! Please login.');
-            document.getElementById('register-section').classList.add('hidden');
-            document.getElementById('login-section').classList.remove('hidden');
+            const fileNames = Array.from(files).map(file => file.name).join(', ');
+            alert(`Uploaded media: ${fileNames}`);
         }
 
-        function loginLandlord() {
-            const email = document.getElementById('landlord-email').value;
-            const password = document.getElementById('landlord-password').value;
-
-            const landlord = landlords.find(l => l.email === email && l.password === password);
-            if (landlord) {
-                currentLandlord = landlord;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('landlord-dashboard').classList.remove('hidden');
-                loadHostels();
-                loadBookings();
+        // Simulated Functions (Replace with backend integration)
+        function login(userType) {
+            const phone = document.getElementById(`${userType}-login-phone`).value;
+            const password = document.getElementById(`${userType}-login-password`).value;
+            if (phone && password) {
+                loginStates[userType] = true;
+                initializeTabs();
+                alert(`${userType.charAt(0).toUpperCase() + userType.slice(1)} logged in successfully.`);
             } else {
-                alert('Invalid email or password');
+                alert('Please enter phone number and password.');
             }
         }
 
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const coords = `${position.coords.latitude}, ${position.coords.longitude}`;
-                        document.getElementById('hostel-coordinates').value = coords;
-                    },
-                    error => {
-                        alert('Error getting location: ' + error.message);
-                    }
-                );
+        function logout(userType) {
+            loginStates[userType] = false;
+            initializeTabs();
+            alert(`${userType.charAt(0).toUpperCase() + userType.slice(1)} logged out successfully.`);
+        }
+
+        function createStudentAccount() {
+            const name = document.getElementById('student-name').value;
+            const phone = document.getElementById('student-phone').value;
+            const password = document.getElementById('student-password').value;
+            if (name && phone && password) {
+                alert('Student account created for ' + name + ' with phone ' + phone);
             } else {
-                alert('Geolocation is not supported by this browser.');
+                alert('Please fill in all fields.');
             }
+        }
+
+        function browseHostels() {
+            alert('Loading more hostels...');
         }
 
         function addHostel() {
-            const name = document.getElementById('hostel-name').value;
-            const units = parseInt(document.getElementById('hostel-units').value);
-            const price = parseInt(document.getElementById('hostel-price').value);
-            const coordinates = document.getElementById('hostel-coordinates').value;
-
-            if (!name || !units || !price || !coordinates) {
-                alert('Please fill all fields');
-                return;
-            }
-
-            const hostel = {
-                id: Date.now(),
-                name,
-                units,
-                price,
-                coordinates,
-                doors: Array.from({ length: units }, (_, i) => ({
-                    doorNumber: i + 1,
-                    isAvailable: true
-                })),
-                landlordEmail: currentLandlord.email
-            };
-
-            hostels.push(hostel);
-            localStorage.setItem('hostels', JSON.stringify(hostels));
-            loadHostels();
-            clearHostelForm();
+            alert('Hostel added successfully.');
         }
 
-        function clearHostelForm() {
-            document.getElementById('hostel-name').value = '';
-            document.getElementById('hostel-units').value = '';
-            document.getElementById('hostel-price').value = '';
-            document.getElementById('hostel-coordinates').value = '';
-        }
-
-        function loadHostels() {
-            hostels = JSON.parse(localStorage.getItem('hostels')) || [];
-            const hostelList = document.getElementById('hostel-list-ul');
-            hostelList.innerHTML = '';
-
-            hostels
-                .filter(h => h.landlordEmail === currentLandlord.email)
-                .forEach(hostel => {
-                    const li = document.createElement('li');
-                    li.className = 'border p-2';
-                    li.innerHTML = `
-                        <div><strong>${hostel.name}</strong> (Units: ${hostel.units}, Price: KES ${hostel.price})</div>
-                        <div>Coordinates: ${hostel.coordinates}</div>
-                        <div>Available Doors: ${hostel.doors.filter(d => d.isAvailable).map(d => d.doorNumber).join(', ') || 'None'}</div>
-                        <button onclick="editHostel(${hostel.id})" class="bg-yellow-600 text-white p-1 rounded mt-2">Edit</button>
-                        <button onclick="manageAvailability(${hostel.id})" class="bg-blue-600 text-white p-1 rounded mt-2 ml-2">Manage Availability</button>
-                    `;
-                    hostelList.appendChild(li);
-                });
-        }
-
-        function editHostel(hostelId) {
-            const hostel = hostels.find(h => h.id === hostelId);
-            if (!hostel) return;
-
-            const newName = prompt('Enter new hostel name:', hostel.name);
-            const newPrice = prompt('Enter new price (KES):', hostel.price);
-            const newCoordinates = prompt('Enter new coordinates:', hostel.coordinates);
-
-            if (newName && newPrice && newCoordinates) {
-                hostel.name = newName;
-                hostel.price = parseInt(newPrice);
-                hostel.coordinates = newCoordinates;
-                localStorage.setItem('hostels', JSON.stringify(hostels));
-                loadHostels();
-            }
-        }
-
-        function manageAvailability(hostelId) {
-            const hostel = hostels.find(h => h.id === hostelId);
-            if (!hostel) return;
-
-            let doorList = 'Available Doors:\n';
-            hostel.doors.forEach(door => {
-                doorList += `Door ${door.doorNumber}: ${door.isAvailable ? 'Available' : 'Occupied'}\n`;
-            });
-
-            const doorNumber = prompt(`${doorList}\nEnter door number to toggle availability:`);
-            const door = hostel.doors.find(d => d.doorNumber === parseInt(doorNumber));
-
-            if (door) {
-                door.isAvailable = !door.isAvailable;
-                localStorage.setItem('hostels', JSON.stringify(hostels));
-                loadHostels();
+        function sendOTP() {
+            const phone = document.getElementById('landlord-phone').value;
+            const location = document.getElementById('landlord-location').value;
+            if (phone && location) {
+                alert('OTP sent to ' + phone);
             } else {
-                alert('Invalid door number');
+                alert('Please enter a phone number and select a location.');
             }
         }
 
-        function loadBookings() {
-            // Simulated bookings (replace with backend API)
-            bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-            const bookingsList = document.getElementById('bookings-list');
-            bookingsList.innerHTML = '';
-
-            bookings
-                .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
-                .forEach(booking => {
-                    const hostel = hostels.find(h => h.id === booking.hostelId);
-                    const li = document.createElement('li');
-                    li.className = 'border p-2';
-                    li.innerHTML = `
-                        <div>Student: ${booking.studentName}</div>
-                        <div>Hostel: ${hostel.name}</div>
-                        <div>Door: ${booking.doorNumber}</div>
-                        <div>Amount: KES ${booking.amount}</div>
-                    `;
-                    bookingsList.appendChild(li);
-                });
-        }
-
-        function generateReport() {
-            const reportType = document.getElementById('report-type').value;
-            const reportOutput = document.getElementById('report-output');
-            reportOutput.innerHTML = '';
-
-            if (reportType === 'occupancy') {
-                const occupied = hostels
-                    .filter(h => h.landlordEmail === currentLandlord.email)
-                    .reduce((sum, h) => sum + h.doors.filter(d => !d.isAvailable).length, 0);
-                const total = hostels
-                    .filter(h => h.landlordEmail === currentLandlord.email)
-                    .reduce((sum, h) => sum + h.doors.length, 0);
-                reportOutput.innerHTML = `Occupancy: ${occupied}/${total} units occupied`;
-            } else if (reportType === 'revenue') {
-                const revenue = bookings
-                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
-                    .reduce((sum, b) => sum + b.amount, 0);
-                reportOutput.innerHTML = `Total Revenue: KES ${revenue}`;
-            } else if (reportType === 'bookings') {
-                const count = bookings
-                    .filter(b => hostels.find(h => h.id === b.hostelId && h.landlordEmail === currentLandlord.email))
-                    .length;
-                reportOutput.innerHTML = `Total Bookings: ${count}`;
+        function verifyOTP() {
+            const phone = document.getElementById('landlord-phone').value;
+            const location = document.getElementById('landlord-location').value;
+            const coordinates = document.getElementById('landlord-coordinates').value;
+            const otp = document.getElementById('otp').value;
+            const password = document.getElementById('landlord-password').value;
+            if (phone && location && otp && password) {
+                alert('Landlord account created for ' + phone + ' at ' + location + (coordinates ? ' (Coordinates: ' + coordinates + ')' : '') + '. Pending admin verification.');
+            } else {
+                alert('Please fill in phone number, location, OTP, and password.');
             }
         }
 
-        // Initialize
-        hostels = JSON.parse(localStorage.getItem('hostels')) || [];
-        bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        function updateHostel() {
+            alert('Hostel details updated.');
+        }
+
+        function verifyLandlord() {
+            alert('Landlord verified.');
+        }
+
+        function verifyHostel() {
+            alert('Hostel verified.');
+        }
     </script>
 </body>
 </html>

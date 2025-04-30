@@ -1,0 +1,39 @@
+[debug] [2025-04-30T16:26:59.569Z] ----------------------------------------------------------------------
+[debug] [2025-04-30T16:26:59.574Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Akello Harry\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2025-04-30T16:26:59.575Z] CLI Version:   14.2.1
+[debug] [2025-04-30T16:26:59.576Z] Platform:      win32
+[debug] [2025-04-30T16:26:59.576Z] Node Version:  v22.15.0
+[debug] [2025-04-30T16:26:59.576Z] Time:          Wed Apr 30 2025 09:26:59 GMT-0700 (Pacific Daylight Time)
+[debug] [2025-04-30T16:26:59.577Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-30T16:26:59.590Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-30T16:26:59.591Z] > authorizing via signed-in user (akelloharry1121@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\Akello Harry\Documents\MasenoHostels\hostelbookingportal\affordhostel
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[info] i  If you want to create a project in a Google Cloud organization or folder, please use "firebase projects:create" instead, and return to this command when you've created the project. 
+[debug] [2025-04-30T16:27:47.567Z] Checked if tokens are valid: true, expires at: 1746032551704
+[debug] [2025-04-30T16:27:47.567Z] Checked if tokens are valid: true, expires at: 1746032551704
+[debug] [2025-04-30T16:27:47.569Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects [none]
+[debug] [2025-04-30T16:27:47.569Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"projectId":"1234567890","name":"afordable"}
+[debug] [2025-04-30T16:27:47.722Z] *** [apiv2] error from fetch(https://cloudresourcemanager.googleapis.com/v1/projects, {"headers":{},"method":"POST","signal":{},"body":"{\"projectId\":\"1234567890\",\"name\":\"afordable\"}"}): FetchError: request to https://cloudresourcemanager.googleapis.com/v1/projects failed, reason: getaddrinfo ENOTFOUND cloudresourcemanager.googleapis.com
+[debug] [2025-04-30T16:27:47.724Z] FirebaseError: Failed to make request to https://cloudresourcemanager.googleapis.com/v1/projects
+    at RetryOperation._fn (C:\Users\Akello Harry\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:261:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to create project. See firebase-debug.log for more info.
