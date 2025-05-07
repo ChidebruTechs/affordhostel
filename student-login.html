@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Login | Off Campus Hostel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-600 text-white py-6">
+    <div class="container mx-auto text-center">
+      <h1 class="text-3xl font-bold">Off Campus Hostel Booking Portal</h1>
+      <nav class="mt-4">
+        <a href="/index" class="text-white hover:underline mx-2">Home</a>
+        <a href="/student-login" class="text-white hover:underline mx-2">Student</a>
+        <a href="/agent-login" class="text-white hover:underline mx-2">Agent</a>
+        <a href="/landlord-login" class="text-white hover:underline mx-2">Landlord</a>
+        <a href="/admin-login" class="text-white hover:underline mx-2">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-center">Student Login</h2>
+    <div class="max-w-md mx-auto bg-white p-6 border rounded shadow">
+      <!-- Login with Email -->
+      <h3 class="text-xl font-medium mb-4">Login with Email</h3>
+      <div class="space-y-4">
+        <input type="email" id="email" placeholder="Email" class="w-full p-2 border rounded">
+        <input type="password" id="password" placeholder="Password" class="w-full p-2 border rounded">
+        <button onclick="loginWithEmail()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Login</button>
+        <p class="text-center text-sm text-gray-600">
+          <a href="./student-forgotpassword.html?method=email" class="text-blue-600 hover:underline">Forgot Password?</a>
+        </p>
+      </div>
+
+      <!-- Login with Phone -->
+      <h3 class="text-xl font-medium mt-6 mb-4">Login with Phone</h3>
+      <div class="space-y-4">
+        <div id="recaptcha-container"></div>
+        <input type="tel" id="phone-number" placeholder="Phone (e.g., +254123456789)" class="w-full p-2 border rounded">
+        <input type="password" id="phone-password" placeholder="Password" class="w-full p-2 border rounded">
+        <button onclick="loginWithPhone()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Login</button>
+        <p class="text-center text-sm text-gray-600">
+          <a href="./student-forgotpassword.html?method=phone" class="text-blue-600 hover:underline">Forgot Password?</a>
+        </p>
+      </div>
+
+      <p class="mt-4 text-center">Don't have an account? <a href="./student-signup.html" class="text-blue-600 hover:underline">Sign Up</a></p>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white text-center py-4">
+    <p>© 2025 Off Campus Hostel. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC9-RcSPqJdE8rtuAKchAyNqmE6sJcKrQM",
+      authDomain: "affordhostel-ff119.firebaseapp.com",
+      projectId: "affordhostel-ff119",
+      storageBucket: "affordhostel-ff119.firebasestorage.app",
+      messagingSenderId: "330171528496",
+      appId: "1:330171528496:web:7f8d844da4d1a62403c4f5"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Login with Email
+    function loginWithEmail() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          alert("Login successful!");
+          window.location.href = "student-browse.html"; // Redirect to student browse
+        })
+        .catch((error) => {
+          console.error("Error during login:", error);
+          alert("Error during login: " + error.message);
+        });
+    }
+
+    // Login with Phone
+    function loginWithPhone() {
+      const phoneNumber = document.getElementById('phone-number').value;
+      const password = document.getElementById('phone-password').value;
+
+      firebase.auth().signInWithEmailAndPassword(phoneNumber + "@example.com", password)
+        .then((userCredential) => {
+          alert("Login successful!");
+          window.location.href = "student-browse.html"; // Redirect to student browse
+        })
+        .catch((error) => {
+          console.error("Error during login:", error);
+          alert("Error during login: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>

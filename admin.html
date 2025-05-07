@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Off Campus Hostel Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-blue-600 text-white py-6 text-center">
+        <h1 class="text-3xl font-bold">Off Campus Hostel Admin Portal</h1>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <!-- Admin Login -->
+        <div id="admin-login" class="max-w-md mx-auto">
+            <h3 class="text-xl font-medium mb-2">Admin Login</h3>
+            <div class="space-y-4">
+                <input type="tel" id="admin-login-phone" placeholder="Phone Number (e.g., +254123456789)" class="w-full p-2 border rounded">
+                <input type="password" id="admin-login-password" placeholder="Password" class="w-full p-2 border rounded">
+                <button onclick="loginAdmin()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-content" class="hidden">
+            <div class="flex justify-end mb-4">
+                <button onclick="logoutAdmin()" class="text-red-600 hover:text-red-700">Logout</button>
+            </div>
+            <h2 class="text-2xl font-semibold mb-4">Admin Dashboard</h2>
+            <p class="text-gray-700 mb-4">Manage landlord verifications, hostel approvals, and generate reports.</p>
+
+            <div class="space-y-6">
+                <!-- Landlord Verification -->
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-xl font-medium mb-2">Pending Landlord Verifications</h3>
+                    <div id="landlord-verification-list" class="space-y-2">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Hostel Verification -->
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-xl font-medium mb-2">Hostel Verification</h3>
+                    <div id="hostel-verification-list" class="space-y-2">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-xl font-medium mb-2">Generate Reports</h3>
+                    <select id="report-type" class="border p-2 mb-2 w-full">
+                        <option value="occupancy">Occupancy Report</option>
+                        <option value="revenue">Revenue Report</option>
+                        <option value="bookings">Bookings Report</option>
+                    </select>
+                    <button onclick="generateReport()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Generate</button>
+                    <div id="report-output" class="mt-2 text-gray-700"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4">
+        <p>© 2025 Off Campus Hostel. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let isAdminLoggedIn = false;
+
+        // Initialize Admin Portal
+        function initializeAdminPortal() {
+            const loginDiv = document.getElementById('admin-login');
+            const contentDiv = document.getElementById('admin-content');
+            if (isAdminLoggedIn) {
+                loginDiv.classList.add('hidden');
+                contentDiv.classList.remove('hidden');
+                loadLandlordVerifications();
+                loadHostelVerifications();
+            } else {
+                loginDiv.classList.remove('hidden');
+                contentDiv.classList.add('hidden');
+            }
+        }
+
+        // Simulated admin authentication (replace with backend API)
+        function loginAdmin() {
+            const phone = document.getElementById('admin-login-phone').value;
+            const password = document.getElementById('admin-login-password').value;
+            if (phone && password) {
+                // Simulate successful login
+                isAdminLoggedIn = true;
+                initializeAdminPortal();
+                alert('Admin logged in successfully.');
+            } else {
+                alert('Please enter phone number and password.');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            initializeAdminPortal();
+            alert('Admin logged out successfully.');
+        }
+
+        // Load pending landlord verifications
+        function loadLandlordVerifications() {
+            const landlords = JSON.parse(localStorage.getItem('landlords')) || [];
+            const verificationList = document.getElementById('landlord-verification-list');
+            verificationList.innerHTML = '';
+
+            // Simulate pending verifications
+            const pendingLandlords = landlords.filter(l => !l.verified);
+            if (pendingLandlords.length === 0) {
+                verificationList.innerHTML = '<p class="text-gray-700">No pending verifications.</p>';
+                return;
+            }
+
+            pendingLandlords.forEach(landlord => {
+                const div = document.createElement('div');
+                div.className = 'border p-2';
+                div.innerHTML = `
+                    <p class="text-gray-700">Landlord: ${landlord.name} - Phone: ${landlord.phone}, Location: ${landlord.location}</p>
+                    <button onclick="verifyLandlord('${landlord.phone}')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Approve</button>
+                `;
+                verificationList.appendChild(div);
+            });
+        }
+
+        // Verify landlord
+        function verifyLandlord(phone) {
+            let landlords = JSON.parse(localStorage.getItem('landlords')) || [];
+            landlords = landlords.map(l => {
+                if (l.phone === phone) {
+                    return { ...l, verified: true };
+                }
+                return l;
+            });
+            localStorage.setItem('landlords', JSON.stringify(landlords));
+            loadLandlordVerifications();
+            alert('Landlord verified successfully.');
+        }
+
+        // Load pending hostel verifications
+        function loadHostelVerifications() {
+            const hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+            const verificationList = document.getElementById('hostel-verification-list');
+            verificationList.innerHTML = '';
+
+            // Simulate pending verifications
+            const pendingHostels = hostels.filter(h => !h.verified);
+            if (pendingHostels.length === 0) {
+                verificationList.innerHTML = '<p class="text-gray-700">No pending verifications.</p>';
+                return;
+            }
+
+            pendingHostels.forEach(hostel => {
+                const div = document.createElement('div');
+                div.className = 'border p-2';
+                div.innerHTML = `
+                    <p class="text-gray-700">Hostel: ${hostel.name} - Coordinates: ${hostel.coordinates}</p>
+                    <button onclick="verifyHostel(${hostel.id})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Verify</button>
+                `;
+                verificationList.appendChild(div);
+            });
+        }
+
+        // Verify hostel
+        function verifyHostel(hostelId) {
+            let hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+            hostels = hostels.map(h => {
+                if (h.id === hostelId) {
+                    return { ...h, verified: true };
+                }
+                return h;
+            });
+            localStorage.setItem('hostels', JSON.stringify(hostels));
+            loadHostelVerifications();
+            alert('Hostel verified successfully.');
+        }
+
+        // Generate reports
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const reportOutput = document.getElementById('report-output');
+            const hostels = JSON.parse(localStorage.getItem('hostels')) || [];
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+            reportOutput.innerHTML = '';
+
+            if (reportType === 'occupancy') {
+                const occupied = hostels.reduce((sum, h) => sum + h.doors.filter(d => !d.isAvailable).length, 0);
+                const total = hostels.reduce((sum, h) => sum + h.doors.length, 0);
+                reportOutput.innerHTML = `Occupancy: ${occupied}/${total} units occupied`;
+            } else if (reportType === 'revenue') {
+                const revenue = bookings.reduce((sum, b) => sum + b.amount, 0);
+                reportOutput.innerHTML = `Total Revenue: KES ${revenue}`;
+            } else if (reportType === 'bookings') {
+                const count = bookings.length;
+                reportOutput.innerHTML = `Total Bookings: ${count}`;
+            }
+        }
+
+        // Initialize
+        initializeAdminPortal();
+    </script>
+</body>
+</html>

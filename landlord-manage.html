@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Properties | Off Campus Hostel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-600 text-white py-6">
+    <div class="container mx-auto text-center">
+      <h1 class="text-3xl font-bold">Manage Properties</h1>
+    </div>
+  </header>
+
+  <nav class="bg-gray-200 py-4">
+    <div class="container mx-auto flex justify-around">
+      <a href="landlord-home.html" class="text-gray-600 hover:text-blue-600 hover:underline">Home</a>
+      <a href="landlord-manage.html" class="text-blue-600 font-semibold hover:underline">Manage</a>
+      <a href="landlord-bookings.html" class="text-gray-600 hover:text-blue-600 hover:underline">Bookings</a>
+      <a href="landlord-reports.html" class="text-gray-600 hover:text-blue-600 hover:underline">Reports</a>
+    </div>
+  </nav>
+
+  <main class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold mb-4">Add Hostel</h2>
+    <p class="text-gray-700 mb-6">Fill in the details below to add a new hostel.</p>
+
+    <!-- Add Hostel Form -->
+    <div class="bg-white p-6 rounded shadow">
+      <form id="add-hostel-form" class="space-y-4">
+        <input type="text" id="hostel-name" placeholder="Hostel Name" class="w-full p-2 border rounded" required>
+        
+        <!-- Area Dropdown -->
+        <select id="hostel-area" class="w-full p-2 border rounded" required>
+          <option value="" disabled selected>Select Area</option>
+          <option value="Nairobi">Nairobi</option>
+          <option value="Mombasa">Mombasa</option>
+          <option value="Kisumu">Kisumu</option>
+        </select>
+
+        <!-- Room Type Dropdown -->
+        <select id="room-type" class="w-full p-2 border rounded" required>
+          <option value="" disabled selected>Select Room Type</option>
+          <option value="Single">Single</option>
+          <option value="Double">Double</option>
+          <option value="Suite">Suite</option>
+        </select>
+
+        <!-- Number of Rooms -->
+        <input type="number" id="number-of-rooms" placeholder="Number of Rooms" class="w-full p-2 border rounded" required>
+
+        <!-- Geolocation -->
+        <button type="button" onclick="getLocation()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Get Location</button>
+        <p id="location-display" class="text-gray-600 mt-2"></p>
+        <div id="map" class="mt-4"></div>
+
+        <input type="number" id="hostel-price" placeholder="Price per Room (KES)" class="w-full p-2 border rounded" required>
+
+        <!-- Media Upload -->
+        <label class="block text-gray-700">Upload Media (Photos/Videos):</label>
+        <input type="file" id="hostel-media" class="w-full p-2 border rounded" multiple accept="image/*,video/*" required>
+
+        <button type="button" onclick="addHostel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Hostel</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="bg-gray-800 text-white text-center py-4">
+    <p>© 2025 Off Campus Hostel. All rights reserved.</p>
+  </footer>
+
+  <script>
+    let map, marker;
+
+    // Initialize the map
+    function initMap(lat, lng) {
+      if (!map) {
+        map = L.map('map').setView([lat, lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        marker = L.marker([lat, lng]).addTo(map);
+      } else {
+        map.setView([lat, lng], 13);
+        marker.setLatLng([lat, lng]);
+      }
+    }
+
+    // Get the user's location
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          document.getElementById('location-display').innerText = `Latitude: ${lat}, Longitude: ${lng}`;
+          initMap(lat, lng);
+        }, (error) => {
+          alert("Unable to retrieve location. Please allow location access.");
+        });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    // Add Hostel Function
+    function addHostel() {
+      const name = document.getElementById('hostel-name').value;
+      const area = document.getElementById('hostel-area').value;
+      const roomType = document.getElementById('room-type').value;
+      const numberOfRooms = parseInt(document.getElementById('number-of-rooms').value, 10);
+      const price = parseFloat(document.getElementById('hostel-price').value);
+      const mediaFiles = document.getElementById('hostel-media').files;
+      const location = document.getElementById('location-display').innerText;
+
+      // Validation
+      if (!name || !area || !roomType || !numberOfRooms || !price || mediaFiles.length < 4 || !location) {
+        alert("Please fill in all fields, upload at least 4 media files, and get the location.");
+        return;
+      }
+
+      if (numberOfRooms <= 0) {
+        alert("Number of rooms must be greater than zero.");
+        return;
+      }
+
+      if (price <= 0) {
+        alert("Price per room must be greater than zero.");
+        return;
+      }
+
+      // Generate a unique ID for the hostel
+      const hostelId = `hostel-${Date.now()}`;
+
+      // Simulate storing hostel information in the database
+      alert(`Hostel "${name}" added successfully with ID: ${hostelId}`);
+      console.log({
+        hostelId,
+        name,
+        area,
+        roomType,
+        numberOfRooms,
+        price,
+        location,
+        mediaFiles: Array.from(mediaFiles).map(file => file.name) // Simulate file names
+      });
+
+      // Reset the form
+      document.getElementById('add-hostel-form').reset();
+      document.getElementById('location-display').innerText = "";
+      if (map) {
+        map.remove();
+        map = null;
+      }
+    }
+  </script>
+</body>
+</html>
