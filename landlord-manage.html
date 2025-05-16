@@ -5,14 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Properties | Off Campus Hostel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
-  <style>
-    #map {
-      height: 400px;
-      width: 100%;
-    }
-  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body class="bg-gray-100 font-sans">
   <header class="bg-blue-600 text-white py-6">
@@ -21,56 +14,55 @@
     </div>
   </header>
 
-  <nav class="bg-gray-200 py-4">
-    <div class="container mx-auto flex justify-around">
-      <a href="landlord-home.html" class="text-gray-600 hover:text-blue-600 hover:underline">Home</a>
-      <a href="landlord-manage.html" class="text-blue-600 font-semibold hover:underline">Manage</a>
-      <a href="landlord-bookings.html" class="text-gray-600 hover:text-blue-600 hover:underline">Bookings</a>
-      <a href="landlord-reports.html" class="text-gray-600 hover:text-blue-600 hover:underline">Reports</a>
-    </div>
-  </nav>
-
   <main class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4">Add Hostel</h2>
-    <p class="text-gray-700 mb-6">Fill in the details below to add a new hostel.</p>
-
-    <!-- Add Hostel Form -->
     <div class="bg-white p-6 rounded shadow">
-      <form id="add-hostel-form" class="space-y-4">
-        <input type="text" id="hostel-name" placeholder="Hostel Name" class="w-full p-2 border rounded" required>
-        
-        <!-- Area Dropdown -->
-        <select id="hostel-area" class="w-full p-2 border rounded" required>
-          <option value="" disabled selected>Select Area</option>
-          <option value="Nairobi">Nairobi</option>
-          <option value="Mombasa">Mombasa</option>
-          <option value="Kisumu">Kisumu</option>
-        </select>
+      <!-- Toggle Buttons -->
+      <div class="flex justify-center mb-6">
+        <button id="show-add-btn" onclick="showForm('add-property')" class="px-4 py-2 bg-blue-600 text-white rounded-l hover:bg-blue-700">Add New Property</button>
+        <button id="show-manage-btn" onclick="showForm('manage-existing')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-r hover:bg-blue-100">Manage Existing Properties</button>
+      </div>
 
-        <!-- Room Type Dropdown -->
-        <select id="room-type" class="w-full p-2 border rounded" required>
-          <option value="" disabled selected>Select Room Type</option>
-          <option value="Single">Single</option>
-          <option value="Double">Double</option>
-          <option value="Suite">Suite</option>
-        </select>
+      <!-- Add New Property Form -->
+      <div id="add-property" class="mt-4">
+        <h3 class="text-lg font-semibold mb-2">Add New Property</h3>
+        <form class="space-y-4" id="property-form" enctype="multipart/form-data">
+          <input type="text" id="property-name" placeholder="Property Name" class="w-full p-2 border rounded" required>
+          <label class="block">
+            <span class="text-gray-700">Area</span>
+            <select id="area" name="area" class="w-full p-2 border rounded" required>
+              <option value="">Select Area</option>
+              <option value="Kikoni">Kikoni</option>
+              <option value="Wandegeya">Wandegeya</option>
+              <option value="Makerere">Makerere</option>
+              <option value="Kasubi">Kasubi</option>
+            </select>
+          </label>
+          <div>
+            <div class="flex items-center space-x-2 mb-2">
+              <button type="button" onclick="getLocation()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Use My Location</button>
+            </div>
+            <div id="map" class="w-full h-48 rounded" style="display:none;"></div>
+          </div>
+          <input type="number" id="price" placeholder="Price" class="w-full p-2 border rounded" required>
+          <input type="number" id="rooms" placeholder="Number of Rooms" class="w-full p-2 border rounded" required>
+          <textarea id="description" placeholder="Description" class="w-full p-2 border rounded" rows="4" required></textarea>
+          <label class="block">
+            <span class="text-gray-700">Upload at least 4 images or videos</span>
+            <input type="file" id="media" name="media" class="w-full mt-2" accept="image/*,video/*" multiple required>
+          </label>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Property</button>
+        </form>
+      </div>
 
-        <!-- Number of Rooms -->
-        <input type="number" id="number-of-rooms" placeholder="Number of Rooms" class="w-full p-2 border rounded" required>
-
-        <!-- Geolocation -->
-        <button type="button" onclick="getLocation()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Get Location</button>
-        <p id="location-display" class="text-gray-600 mt-2"></p>
-        <div id="map" class="mt-4"></div>
-
-        <input type="number" id="hostel-price" placeholder="Price per Room (KES)" class="w-full p-2 border rounded" required>
-
-        <!-- Media Upload -->
-        <label class="block text-gray-700">Upload Media (Photos/Videos):</label>
-        <input type="file" id="hostel-media" class="w-full p-2 border rounded" multiple accept="image/*,video/*" required>
-
-        <button type="button" onclick="addHostel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Hostel</button>
-      </form>
+      <!-- Manage Existing Properties Form -->
+      <div id="manage-existing" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-2">Manage Existing Properties</h3>
+        <form id="manage-properties-form">
+          <div id="property-list" class="space-y-6 mt-4">
+            <!-- Properties will be dynamically inserted here -->
+          </div>
+        </form>
+      </div>
     </div>
   </main>
 
@@ -78,89 +70,219 @@
     <p>© 2025 Off Campus Hostel. All rights reserved.</p>
   </footer>
 
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    let map, marker;
+    let properties = [];
 
-    // Initialize the map
-    function initMap(lat, lng) {
-      if (!map) {
-        map = L.map('map').setView([lat, lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-        marker = L.marker([lat, lng]).addTo(map);
+    function showForm(formId) {
+      document.getElementById('add-property').classList.add('hidden');
+      document.getElementById('manage-existing').classList.add('hidden');
+      document.getElementById(formId).classList.remove('hidden');
+      // Toggle button styles
+      document.getElementById('show-add-btn').classList.remove('bg-blue-700', 'text-white');
+      document.getElementById('show-add-btn').classList.add('bg-gray-200', 'text-gray-800');
+      document.getElementById('show-manage-btn').classList.remove('bg-blue-700', 'text-white');
+      document.getElementById('show-manage-btn').classList.add('bg-gray-200', 'text-gray-800');
+      if(formId === 'add-property') {
+        document.getElementById('show-add-btn').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('show-add-btn').classList.remove('bg-gray-200', 'text-gray-800');
       } else {
-        map.setView([lat, lng], 13);
-        marker.setLatLng([lat, lng]);
+        document.getElementById('show-manage-btn').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('show-manage-btn').classList.remove('bg-gray-200', 'text-gray-800');
+        renderProperties();
       }
     }
 
-    // Get the user's location
     function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          document.getElementById('location-display').innerText = `Latitude: ${lat}, Longitude: ${lng}`;
-          initMap(lat, lng);
-        }, (error) => {
-          alert("Unable to retrieve location. Please allow location access.");
-        });
-      } else {
-        alert("Geolocation is not supported by this browser.");
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(success, error);
+
+      function success(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        showMap(lat, lon);
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.display_name) {
+              document.getElementById('description').value = data.display_name;
+            } else {
+              document.getElementById('description').value = `${lat}, ${lon}`;
+            }
+          });
+      }
+      function error() {
+        alert("Unable to retrieve your location.");
       }
     }
 
-    // Add Hostel Function
-    function addHostel() {
-      const name = document.getElementById('hostel-name').value;
-      const area = document.getElementById('hostel-area').value;
-      const roomType = document.getElementById('room-type').value;
-      const numberOfRooms = parseInt(document.getElementById('number-of-rooms').value, 10);
-      const price = parseFloat(document.getElementById('hostel-price').value);
-      const mediaFiles = document.getElementById('hostel-media').files;
-      const location = document.getElementById('location-display').innerText;
+    function showMap(lat, lon) {
+      const mapDiv = document.getElementById('map');
+      mapDiv.style.display = "block";
+      if (window.propertyMap) {
+        window.propertyMap.setView([lat, lon], 16);
+        if (window.propertyMarker) {
+          window.propertyMarker.setLatLng([lat, lon]);
+        } else {
+          window.propertyMarker = L.marker([lat, lon]).addTo(window.propertyMap);
+        }
+      } else {
+        window.propertyMap = L.map('map').setView([lat, lon], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(window.propertyMap);
+        window.propertyMarker = L.marker([lat, lon]).addTo(window.propertyMap);
+      }
+    }
 
-      // Validation
-      if (!name || !area || !roomType || !numberOfRooms || !price || mediaFiles.length < 4 || !location) {
-        alert("Please fill in all fields, upload at least 4 media files, and get the location.");
+    document.addEventListener('DOMContentLoaded', function() {
+      // Default to Add Property form
+      showForm('add-property');
+      const propertyForm = document.getElementById('property-form');
+      if (propertyForm) {
+        propertyForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const mediaInput = document.getElementById('media');
+          if (mediaInput.files.length < 4) {
+            alert("Please upload at least 4 images or videos of the property.");
+            return;
+          }
+          const numRooms = Number(document.getElementById('rooms').value);
+          const property = {
+            name: document.getElementById('property-name').value,
+            area: document.getElementById('area').value,
+            price: document.getElementById('price').value,
+            rooms: numRooms,
+            description: document.getElementById('description').value,
+            visible: true,
+            roomStatus: Array.from({length: numRooms}, () => "Vacant")
+          };
+          properties.push(property);
+          alert("Property added!");
+          propertyForm.reset();
+          document.getElementById('map').style.display = "none";
+          showForm('manage-existing');
+        });
+      }
+    });
+
+    function renderProperties() {
+      const list = document.getElementById('property-list');
+      list.innerHTML = "";
+      if (properties.length === 0) {
+        list.innerHTML = "<p class='text-gray-500'>No properties added yet.</p>";
         return;
       }
-
-      if (numberOfRooms <= 0) {
-        alert("Number of rooms must be greater than zero.");
-        return;
-      }
-
-      if (price <= 0) {
-        alert("Price per room must be greater than zero.");
-        return;
-      }
-
-      // Generate a unique ID for the hostel
-      const hostelId = `hostel-${Date.now()}`;
-
-      // Simulate storing hostel information in the database
-      alert(`Hostel "${name}" added successfully with ID: ${hostelId}`);
-      console.log({
-        hostelId,
-        name,
-        area,
-        roomType,
-        numberOfRooms,
-        price,
-        location,
-        mediaFiles: Array.from(mediaFiles).map(file => file.name) // Simulate file names
+      properties.forEach((prop, idx) => {
+        let roomsHtml = "";
+        for (let i = 0; i < Number(prop.rooms); i++) {
+          const status = prop.roomStatus && prop.roomStatus[i] === "Occupied";
+          roomsHtml += `
+            <span class="${i > 0 ? 'ml-4' : ''}">
+              <span>${1 + i}</span>
+              <button type="button" onclick="toggleRoomStatus(this, ${idx}, ${i})" class="ml-2 px-2 py-1 text-xs rounded ${status ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">${status ? 'Occupied' : 'Vacant'}</button>
+            </span>
+          `;
+        }
+        list.innerHTML += `
+          <div class="border rounded p-4 shadow mb-2">
+            <div class="flex justify-between items-center">
+              <div>
+                <h4 class="font-semibold text-lg">${prop.name}</h4>
+                <p class="text-gray-600 text-sm">Area: ${prop.area}</p>
+                <p class="text-gray-600 text-sm">Price: KSH ${prop.price}</p>
+                <p class="text-gray-600 text-sm">Rooms: ${roomsHtml}</p>
+                <p class="text-gray-600 text-sm">Description: ${prop.description}</p>
+              </div>
+              <div class="flex flex-col items-end">
+                <label class="flex items-center mb-2">
+                  <input type="checkbox" ${prop.visible ? "checked" : ""} onchange="toggleVisibility(this, ${idx})" class="mr-2">
+                  <span class="text-sm">${prop.visible ? "Visible" : "Hidden"}</span>
+                </label>
+                <button type="button" onclick="editProperty(this, ${idx})" class="text-blue-600 hover:underline text-sm mb-1">Edit</button>
+                <button type="button" onclick="saveProperty(this, ${idx})" class="text-green-600 hover:underline text-sm hidden">Save</button>
+              </div>
+            </div>
+            <div class="edit-fields hidden mt-2">
+              <input type="text" value="${prop.name}" class="w-full p-2 border rounded mb-2 edit-name">
+              <select class="w-full p-2 border rounded mb-2 edit-area">
+                <option value="Kikoni" ${prop.area === "Kikoni" ? "selected" : ""}>Kikoni</option>
+                <option value="Wandegeya" ${prop.area === "Wandegeya" ? "selected" : ""}>Wandegeya</option>
+                <option value="Makerere" ${prop.area === "Makerere" ? "selected" : ""}>Makerere</option>
+                <option value="Kasubi" ${prop.area === "Kasubi" ? "selected" : ""}>Kasubi</option>
+              </select>
+              <input type="number" value="${prop.price}" class="w-full p-2 border rounded mb-2 edit-price">
+              <input type="number" value="${prop.rooms}" class="w-full p-2 border rounded mb-2 edit-rooms" min="1" onchange="updateRoomInputs(${idx}, this.value)">
+              <textarea class="w-full p-2 border rounded mb-2 edit-description">${prop.description}</textarea>
+            </div>
+          </div>
+        `;
       });
+    }
 
-      // Reset the form
-      document.getElementById('add-hostel-form').reset();
-      document.getElementById('location-display').innerText = "";
-      if (map) {
-        map.remove();
-        map = null;
+    function toggleVisibility(checkbox, idx) {
+      properties[idx].visible = checkbox.checked;
+      renderProperties();
+    }
+
+    function toggleRoomStatus(btn, propIdx, roomIdx) {
+      const prop = properties[propIdx];
+      if (!prop.roomStatus) prop.roomStatus = [];
+      prop.roomStatus[roomIdx] = (prop.roomStatus[roomIdx] === "Occupied") ? "Vacant" : "Occupied";
+      renderProperties();
+    }
+
+    function editProperty(btn, idx) {
+      const card = btn.closest('.border');
+      card.querySelector('.edit-fields').classList.remove('hidden');
+      btn.classList.add('hidden');
+      card.querySelector('.text-green-600').classList.remove('hidden');
+    }
+
+    function saveProperty(btn, idx) {
+      const card = btn.closest('.border');
+      const name = card.querySelector('.edit-name').value;
+      const area = card.querySelector('.edit-area').value;
+      const price = card.querySelector('.edit-price').value;
+      const rooms = Number(card.querySelector('.edit-rooms').value);
+      const description = card.querySelector('.edit-description').value;
+      properties[idx].name = name;
+      properties[idx].area = area;
+      properties[idx].price = price;
+      properties[idx].rooms = rooms;
+      properties[idx].description = description;
+      // Adjust roomStatus array to match new number of rooms
+      if (!properties[idx].roomStatus) properties[idx].roomStatus = [];
+      if (properties[idx].roomStatus.length > rooms) {
+        properties[idx].roomStatus = properties[idx].roomStatus.slice(0, rooms);
+      } else if (properties[idx].roomStatus.length < rooms) {
+        properties[idx].roomStatus = properties[idx].roomStatus.concat(Array.from({length: rooms - properties[idx].roomStatus.length}, () => "Vacant"));
       }
+      renderProperties();
+    }
+
+    // Optional: update roomStatus array live when changing number of rooms in edit
+    function updateRoomInputs(idx, newRooms) {
+      newRooms = Number(newRooms);
+      if (!properties[idx].roomStatus) properties[idx].roomStatus = [];
+      if (properties[idx].roomStatus.length > newRooms) {
+        properties[idx].roomStatus = properties[idx].roomStatus.slice(0, newRooms);
+      } else if (properties[idx].roomStatus.length < newRooms) {
+        properties[idx].roomStatus = properties[idx].roomStatus.concat(Array.from({length: newRooms - properties[idx].roomStatus.length}, () => "Vacant"));
+      }
+      renderProperties();
+      // Keep edit mode open after re-render
+      setTimeout(() => {
+        const cards = document.querySelectorAll('#property-list .border');
+        if (cards[idx]) {
+          cards[idx].querySelector('.edit-fields').classList.remove('hidden');
+          cards[idx].querySelector('.text-blue-600').classList.add('hidden');
+          cards[idx].querySelector('.text-green-600').classList.remove('hidden');
+        }
+      }, 0);
     }
   </script>
 </body>

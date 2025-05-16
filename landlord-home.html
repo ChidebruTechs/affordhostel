@@ -5,47 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Landlord Home | Off Campus Hostel</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS for OSM map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body class="bg-gray-100 font-sans">
   <header class="bg-blue-600 text-white py-6">
     <div class="container mx-auto text-center">
-      <h1 class="text-3xl font-bold">Landlord Dashboard</h1>
+      <h1 class="text-3xl font-bold">Landlord Home</h1>
     </div>
   </header>
 
-  <nav class="bg-gray-200 py-4">
-    <div class="container mx-auto flex justify-around">
-      <a href="landlord-home.html" class="text-blue-600 font-semibold hover:underline">Home</a>
-      <a href="landlord-manage.html" class="text-gray-600 hover:text-blue-600 hover:underline">Manage</a>
-      <a href="landlord-bookings.html" class="text-gray-600 hover:text-blue-600 hover:underline">Bookings</a>
-      <a href="landlord-reports.html" class="text-gray-600 hover:text-blue-600 hover:underline">Reports</a>
-    </div>
-  </nav>
-
   <main class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4">Welcome, Landlord!</h2>
-    <p class="text-gray-700">This is your dashboard where you can manage your properties, view bookings, and generate reports.</p>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-      <!-- Manage Section -->
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="text-xl font-semibold mb-2">Manage Properties</h3>
-        <p class="text-gray-600">Add, edit, or remove your properties.</p>
-        <a href="landlord-manage.html" class="text-blue-600 hover:underline mt-2 inline-block">Go to Manage</a>
+    <div class="bg-white p-6 rounded shadow">
+      <!-- Main Tabs -->
+      <div class="flex justify-around border-b mb-4 mt-4">
+        <span onclick="showMainTab('home')" class="cursor-pointer text-blue-600 font-semibold hover:underline">Home</span>
+        <span onclick="redirectToManage()" class="cursor-pointer text-gray-600 hover:text-blue-600 hover:underline">Manage</span>
+        <span onclick="redirectToReports()" class="cursor-pointer text-gray-600 hover:text-blue-600 hover:underline">Reports</span>
       </div>
 
-      <!-- Bookings Section -->
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="text-xl font-semibold mb-2">View Bookings</h3>
-        <p class="text-gray-600">Check and manage bookings for your properties.</p>
-        <a href="landlord-bookings.html" class="text-blue-600 hover:underline mt-2 inline-block">Go to Bookings</a>
-      </div>
-
-      <!-- Reports Section -->
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="text-xl font-semibold mb-2">Generate Reports</h3>
-        <p class="text-gray-600">View and download reports for your properties and bookings.</p>
-        <a href="landlord-reports.html" class="text-blue-600 hover:underline mt-2 inline-block">Go to Reports</a>
+      <!-- Home Tab Content -->
+      <div id="home" class="mt-4">
+        <h2 id="welcome-message" class="text-xl font-semibold mb-4">Welcome, Landlord!</h2>
+        <p class="text-gray-700">This is your dashboard where you can manage your properties, view bookings, and generate reports.</p>
       </div>
     </div>
   </main>
@@ -53,5 +35,38 @@
   <footer class="bg-gray-800 text-white text-center py-4">
     <p>© 2025 Off Campus Hostel. All rights reserved.</p>
   </footer>
+
+  <script>
+    // Set welcome message with first word of username
+    window.onload = function() {
+      // Replace this with actual logic to get the user's name
+      const userName = "John Doe"; // Example: replace with real user name
+      const firstName = userName.split(" ")[0];
+      document.getElementById("welcome-message").textContent = `Welcome ${firstName}`;
+      showMainTab("home");
+    };
+
+    function showMainTab(tabId) {
+      const mainTabs = ["home"];
+      mainTabs.forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) {
+          if (id === tabId) {
+            tab.classList.remove("hidden");
+          } else {
+            tab.classList.add("hidden");
+          }
+        }
+      });
+    }
+
+    function redirectToManage() {
+      window.location.href = "landlord-manage.html";
+    }
+
+    function redirectToReports() {
+      window.location.href = "landlord-reports.html";
+    }
+  </script>
 </body>
 </html>

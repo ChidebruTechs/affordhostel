@@ -1,173 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student - Browse Hostels</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Property Browse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
-  <header class="bg-blue-600 text-white py-6">
-    <div class="container mx-auto text-center">
-      <h1 class="text-3xl font-bold">Off Campus Hostel Booking Portal</h1>
-    </div>
-  </header>
-  <div class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4">Browse Off-Campus Hostels</h2>
-    <div id="hostel-browse-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-    <div id="map" class="hidden h-96 w-full mt-4 border rounded"></div>
-  </div>
-  <footer class="bg-gray-800 text-white text-center py-4">
-    <p>© 2025 Off Campus Hostel. All rights reserved.</p>
-  </footer>
-  <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyC9-RcSPqJdE8rtuAKchAyNqmE6sJcKrQM",
-      authDomain: "affordhostel-ff119.firebaseapp.com",
-      projectId: "affordhostel-ff119",
-      storageBucket: "affordhostel-ff119.appspot.com",
-      messagingSenderId: "330171528496",
-      appId: "1:330171528496:web:7f8d844da4d1a62403c4f5"
-    };
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Browse Properties</h1>
 
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // Load Hostels from Firestore
-    async function loadStudentHostels() {
-      const hostelList = document.getElementById("hostel-browse-list");
-      hostelList.innerHTML = "<p>Loading hostels...</p>";
-
-      try {
-        const querySnapshot = await db.collection("hostels").get();
-        hostelList.innerHTML = ""; // Clear loading message
-
-        if (querySnapshot.empty) {
-          hostelList.innerHTML = "<p class='text-gray-600'>No hostels available at the moment.</p>";
-          console.log("No hostels found in Firestore.");
-          return;
-        }
-
-        querySnapshot.forEach((doc) => {
-          const hostel = doc.data();
-          console.log("Hostel data fetched:", hostel); // Debugging
-
-          // Generate room list with statuses
-          const roomList = hostel.rooms.map((room, index) => `
-            <li class="flex justify-between items-center">
-              <span>Room ${index + 1}: ${room.status}</span>
-              ${room.status === "Vacant" ? `<button onclick="bookRoom('${doc.id}', ${index})" class="bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700">Book</button>` : ""}
-            </li>
-          `).join("");
-
-          const hostelCard = `
-            <div class="bg-white p-4 border rounded shadow">
-              <h4 class="text-lg font-semibold">${hostel.name}</h4>
-              <p class="text-gray-600">Location: ${hostel.area}</p>
-              <p class="text-gray-600">Price: KSH ${hostel.price}</p>
-              <p class="text-gray-600">Rooms: ${hostel.numberOfRooms}</p>
-              <ul class="mt-2 space-y-2">${roomList}</ul>
-              <div class="mt-4">
-                <button onclick="viewOnMap(${hostel.location.latitude}, ${hostel.location.longitude})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">View on Map</button>
-                <button onclick="redirectToOSM(${hostel.location.latitude}, ${hostel.location.longitude})" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Open in OSM</button>
-                <button onclick="getDirections(${hostel.location.latitude}, ${hostel.location.longitude})" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Get Directions</button>
-              </div>
+        <!-- Filter Form -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Filter Properties</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="priceFrom" class="block text-sm font-medium text-gray-600">Price From ($)</label>
+                    <input type="number" id="priceFrom" class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Min Price">
+                </div>
+                <div>
+                    <label for="priceTo" class="block text-sm font-medium text-gray-600">Price To ($)</label>
+                    <input type="number" id="priceTo" class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Max Price">
+                </div>
+                <div>
+                    <label for="area" class="block text-sm font-medium text-gray-600">Area</label>
+                    <input type="text" id="area" class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Downtown">
+                </div>
+                <div>
+                    <label for="propertyType" class="block text-sm font-medium text-gray-600">Property Type</label>
+                    <select id="propertyType" class="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Types</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="House">House</option>
+                        <option value="Studio">Studio</option>
+                    </select>
+                </div>
             </div>
-          `;
-          hostelList.innerHTML += hostelCard;
-        });
-      } catch (error) {
-        console.error("Error loading hostels:", error);
-        hostelList.innerHTML = "<p class='text-red-600'>Error loading hostels. Please try again later.</p>";
-      }
-    }
+            <button id="filterBtn" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Apply Filters</button>
+        </div>
 
-    // Book Room
-    async function bookRoom(hostelId, roomIndex) {
-      try {
-        const hostelRef = db.collection("hostels").doc(hostelId);
-        const hostelDoc = await hostelRef.get();
+        <!-- Property Listings -->
+        <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
 
-        if (hostelDoc.exists) {
-          const hostel = hostelDoc.data();
+    <script>
+        // Mock data simulating landlord-uploaded properties
+        const properties = [
+            {
+                id: 1,
+                price: 500,
+                area: "Downtown",
+                type: "Apartment",
+                rooms: [
+                    { roomNumber: "101", vacant: true },
+                    { roomNumber: "102", vacant: false }
+                ]
+            },
+            {
+                id: 2,
+                price: 700,
+                area: "Suburb",
+                type: "House",
+                rooms: [
+                    { roomNumber: "201", vacant: true },
+                    { roomNumber: "202", vacant: true }
+                ]
+            },
+            {
+                id: 3,
+                price: 400,
+                area: "Downtown",
+                type: "Studio",
+                rooms: [
+                    { roomNumber: "301", vacant: false }
+                ]
+            }
+        ];
 
-          if (hostel.rooms[roomIndex].status === "Vacant") {
-            hostel.rooms[roomIndex].status = "Booked";
-            await hostelRef.update({ rooms: hostel.rooms });
-            alert(`Room ${roomIndex + 1} booked successfully at ${hostel.name}.`);
-            loadStudentHostels(); // Refresh the list
-          } else {
-            alert("This room is no longer available.");
-          }
-        } else {
-          alert("Hostel not found.");
+        // Function to display properties
+        function displayProperties(filteredProperties) {
+            const propertyList = document.getElementById('propertyList');
+            propertyList.innerHTML = '';
+
+            if (filteredProperties.length === 0) {
+                propertyList.innerHTML = '<p class="text-gray-600 col-span-full">No properties match your filters.</p>';
+                return;
+            }
+
+            filteredProperties.forEach(property => {
+                const card = document.createElement('div');
+                console.log("Property:",property);
+                card.className = 'bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition';
+                card.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-800">${property.type} in ${property.area}</h3>
+                    <p class="text-gray-600">Price: $${property.price}/month</p>
+                    <h4 class="mt-3 font-medium text-gray-700">Rooms:</h4>
+                    <ul class="list-disc pl-5 text-gray-600">
+                        ${property.rooms.map(room => `
+                            <li class="flex items-center">
+                                Room ${room.roomNumber}: 
+                                <span class="${room.vacant ? 'text-green-500' : 'text-red-500'} ml-2">
+                                    ${room.vacant ? 'Vacant' : 'Occupied'}
+                                </span>
+                                ${room.vacant ? `<button onclick="bookRoom(${property.id}, '${room.roomNumber}')" class="ml-4 text-blue-600 hover:underline">Book</button>` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                propertyList.appendChild(card);
+            });
         }
-      } catch (error) {
-        console.error("Error booking room:", error);
-        alert("Failed to book room. Please try again later.");
-      }
-    }
 
-    // View Hostel on Map
-    function viewOnMap(lat, lng) {
-      console.log(`Viewing hostel on map at coordinates: ${lat}, ${lng}`);
-      const mapDiv = document.getElementById("map");
-      mapDiv.classList.remove("hidden");
+        // Function to filter properties
+        function filterProperties() {
+            const priceFrom = parseFloat(document.getElementById('priceFrom').value) || 0;
+            const priceTo = parseFloat(document.getElementById('priceTo').value) || Infinity;
+            const area = document.getElementById('area').value.trim().toLowerCase();
+            const propertyType = document.getElementById('propertyType').value;
 
-      const map = L.map("map").setView([lat, lng], 13);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap contributors"
-      }).addTo(map);
+            const filteredProperties = properties.filter(property => {
+                return property.price >= priceFrom &&
+                       property.price <= priceTo &&
+                       (area === '' || property.area.toLowerCase().includes(area)) &&
+                       (propertyType === '' || property.type === propertyType);
+            });
 
-      L.marker([lat, lng]).addTo(map).bindPopup("Hostel Location").openPopup();
-    }
-
-    // Redirect to OpenStreetMap
-    function redirectToOSM(lat, lng) {
-      console.log(`Redirecting to OpenStreetMap for coordinates: ${lat}, ${lng}`);
-      const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`;
-      window.open(osmUrl, "_blank");
-    }
-
-    // Get Directions
-    function getDirections(lat, lng) {
-      console.log(`Getting directions to coordinates: ${lat}, ${lng}`);
-      const userLocation = prompt("Enter your location (or leave blank to use your current location):");
-
-      if (userLocation) {
-        // Use custom location
-        console.log(`Using custom location: ${userLocation}`);
-        const osmDirectionsUrl = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${encodeURIComponent(userLocation)};${lat},${lng}`;
-        window.open(osmDirectionsUrl, "_blank");
-      } else {
-        // Use current location
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            console.log(`Using current location: ${userLat}, ${userLng}`);
-            const osmDirectionsUrl = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${userLat},${userLng};${lat},${lng}`;
-            window.open(osmDirectionsUrl, "_blank");
-          }, (error) => {
-            console.error("Error retrieving current location:", error);
-            alert("Unable to retrieve your location. Please allow location access or enter a custom location.");
-          });
-        } else {
-          console.error("Geolocation is not supported by this browser.");
-          alert("Geolocation is not supported by your browser. Please enter a custom location.");
+            displayProperties(filteredProperties);
         }
-      }
-    }
 
-    // Load hostels on page load
-    document.addEventListener("DOMContentLoaded", loadStudentHostels);
-  </script>
+        // Function to handle booking
+        function bookRoom(propertyId, roomNumber) {
+            // Simulate booking action (in a real app, this would call an API)
+            alert(`Booking requested for Property ID ${propertyId}, Room ${roomNumber}`);
+            // Optionally, update the property's room status and refresh the display
+            const property = properties.find(p => p.id === propertyId);
+            const room = property.rooms.find(r => r.roomNumber === roomNumber);
+            room.vacant = false; // Mark as occupied
+            filterProperties(); // Refresh the display
+        }
+
+        // Event listener for filter button
+        document.getElementById('filterBtn').addEventListener('click', filterProperties);
+
+        // Initial display of all properties
+        displayProperties(properties);
+    </script>
 </body>
 </html>

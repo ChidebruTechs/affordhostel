@@ -3,140 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Landlord Sign Up | Off Campus Hostel</title>
+  <title>Landlord Signup | Off Campus Hostel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
-  <header class="bg-blue-600 text-white py-6">
-    <div class="container mx-auto text-center">
-      <h1 class="text-3xl font-bold">Off Campus Hostel Booking Portal</h1>
-      <nav class="mt-4">
-        <a href="/index" class="text-white hover:underline mx-2">Home</a>
-        <a href="/student-login" class="text-white hover:underline mx-2">Student</a>
-        <a href="/agent-login" class="text-white hover:underline mx-2">Agent</a>
-        <a href="/landlord-login" class="text-white hover:underline mx-2">Landlord</a>
-        <a href="/admin-login" class="text-white hover:underline mx-2">Admin</a>
-      </nav>
-    </div>
-  </header>
-
   <div class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold mb-4 text-center">Landlord Sign Up</h2>
+    <h2 class="text-2xl font-semibold mb-4 text-center">Landlord Signup</h2>
     <div class="max-w-md mx-auto bg-white p-6 border rounded shadow">
-      <!-- Sign-Up Form -->
-      <div id="signup-form" class="space-y-4">
-        <input type="text" id="phone-signup" placeholder="Phone Number (e.g., +1234567890)" class="w-full p-2 border rounded">
-        <input type="password" id="password-signup" placeholder="Password" class="w-full p-2 border rounded">
-        <input type="password" id="confirm-password-signup" placeholder="Confirm Password" class="w-full p-2 border rounded">
-        <p id="password-error" class="text-red-600 text-sm hidden">Passwords do not match or do not meet the required criteria.</p>
-        <div id="recaptcha-container"></div>
-        <button onclick="sendOtpForSignUp()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Send OTP</button>
-        <div id="otp-verification" class="hidden space-y-4">
-          <input type="text" id="otp-code" placeholder="Enter OTP" class="w-full p-2 border rounded">
-          <button onclick="verifyOtp()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">Verify OTP</button>
-        </div>
-        <p class="text-center text-sm text-gray-600">
-          Already have an account? <a href="landlord-login.html" class="text-blue-600 hover:underline">Login</a>
-        </p>
+      <!-- Toggle Between Email and Phone Signup -->
+      <div class="flex justify-between items-center mb-4">
+        <button onclick="showForm('email')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Sign up with Email</button>
+        <button onclick="showForm('phone')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Sign up with Phone</button>
       </div>
+
+      <!-- Email Signup Form -->
+      <form id="email-signup-form" class="space-y-4">
+        <input type="text" id="username-email" placeholder="Username" class="w-full p-2 border rounded" required>
+        <input type="email" id="email" placeholder="Email Address" class="w-full p-2 border rounded" required>
+        <input type="password" id="password-email" placeholder="Password" class="w-full p-2 border rounded" required>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Create Account</button>
+      </form>
+
+      <!-- Phone Signup Form -->
+      <form id="phone-signup-form" class="space-y-4 hidden">
+        <input type="text" id="username-phone" placeholder="Username" class="w-full p-2 border rounded" required>
+        <input type="text" id="phone-number" placeholder="Phone Number" class="w-full p-2 border rounded" required>
+        <input type="password" id="password-phone" placeholder="Password" class="w-full p-2 border rounded" required>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">Create Account</button>
+      </form>
+
+      <!-- Status Message -->
+      <p id="status-message" class="text-center mt-4 font-semibold"></p>
     </div>
   </div>
 
-  <footer class="bg-gray-800 text-white text-center py-4">
-    <p>© 2025 Off Campus Hostel. All rights reserved.</p>
-  </footer>
-
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyC9-RcSPqJdE8rtuAKchAyNqmE6sJcKrQM",
-      authDomain: "affordhostel-ff119.firebaseapp.com",
-      projectId: "affordhostel-ff119",
-      storageBucket: "affordhostel-ff119.firebasestorage.app",
-      messagingSenderId: "330171528496",
-      appId: "1:330171528496:web:7f8d844da4d1a62403c4f5"
-    };
+    // Show the selected form
+    function showForm(method) {
+      const emailForm = document.getElementById('email-signup-form');
+      const phoneForm = document.getElementById('phone-signup-form');
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Initialize Recaptcha
-    window.onload = function () {
-      firebase.auth().useDeviceLanguage();
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        size: 'normal',
-        callback: (response) => {
-          console.log("Recaptcha verified");
-        },
-        'expired-callback': () => {
-          alert("Recaptcha expired. Please refresh the page and try again.");
-        }
-      });
-
-      recaptchaVerifier.render().catch((error) => {
-        console.error("Error rendering Recaptcha:", error);
-        alert("Failed to initialize Recaptcha. Please refresh the page.");
-      });
-    };
-
-    let confirmationResult;
-
-    function validatePassword(password, confirmPassword) {
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      return password === confirmPassword && passwordRegex.test(password);
-    }
-
-    function formatPhoneNumber(phoneNumber) {
-      if (!phoneNumber.startsWith("+")) {
-        alert("Please include the country code (e.g., +1234567890).");
-        return null;
+      if (method === 'email') {
+        emailForm.classList.remove('hidden');
+        phoneForm.classList.add('hidden');
+      } else if (method === 'phone') {
+        phoneForm.classList.remove('hidden');
+        emailForm.classList.add('hidden');
       }
-      return phoneNumber;
     }
 
-    function sendOtpForSignUp() {
-      let phoneNumber = document.getElementById('phone-signup').value;
-      const password = document.getElementById('password-signup').value;
-      const confirmPassword = document.getElementById('confirm-password-signup').value;
+    // Handle email signup form submission
+    document.getElementById('email-signup-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const username = document.getElementById('username-email').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password-email').value;
 
-      if (!validatePassword(password, confirmPassword)) {
-        document.getElementById('password-error').classList.remove('hidden');
-        return;
-      } else {
-        document.getElementById('password-error').classList.add('hidden');
-      }
+      console.log("Email Signup:", { username, email, password });
+      // Simulate account creation
+      alert("Account created successfully with Email!");
+      redirectToHome();
+    });
 
-      phoneNumber = formatPhoneNumber(phoneNumber);
-      if (!phoneNumber) return; // Stop if phone number is invalid
+    // Handle phone signup form submission
+    document.getElementById('phone-signup-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const username = document.getElementById('username-phone').value;
+      const phoneNumber = document.getElementById('phone-number').value;
+      const password = document.getElementById('password-phone').value;
 
-      const appVerifier = window.recaptchaVerifier;
+      console.log("Phone Signup:", { username, phoneNumber, password });
+      // Simulate account creation
+      alert("Account created successfully with Phone!");
+      redirectToHome();
+    });
 
-      firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
-        .then((result) => {
-          confirmationResult = result;
-          alert("OTP sent to your phone. Please enter it to verify.");
-          document.getElementById('otp-verification').classList.remove('hidden');
-        })
-        .catch((error) => {
-          console.error("Error sending OTP:", error);
-          alert("Error sending OTP: " + error.message + ". Please try again.");
-        });
-    }
-
-    function verifyOtp() {
-      const otpCode = document.getElementById('otp-code').value;
-
-      confirmationResult.confirm(otpCode)
-        .then((result) => {
-          alert("Sign-up successful! Please wait for admin verification.");
-          window.location.href = "landlord-login.html";
-        })
-        .catch((error) => {
-          console.error("Error verifying OTP:", error);
-          alert("Error verifying OTP: " + error.message + ". Please try again.");
-        });
+    // Redirect to landlord home page
+    function redirectToHome() {
+      window.location.href = "landlord-home.html";
     }
   </script>
 </body>
