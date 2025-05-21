@@ -6,14 +6,36 @@
 
 body {
   font-family: Arial, sans-serif;
-  line-height: 1.6;
-  background-color: #f4f4f4;
   color: #333;
   min-height: 100vh;
+  padding: 1rem;
+}
+nav {
+  margin: 0 auto;
+}
+nav ul {
   display: flex;
-  flex-direction: column;
+}
+nav ul li {
+  list-style: none;
+  margin-right: 12px;
+  background-color: rgb(68, 64, 64);
+  
+}
+nav ul li a {
+  text-decoration: none;
+  font-weight: 700;
+  padding: 4px;
+  color: #cdf008;
 }
 
+nav ul li:hover {
+  background-color: #cdf008;
+}
+
+nav ul li a:hover {
+  color: #1b1b1b;
+}
 .container {
   max-width: 1200px;
   margin: 0 auto;
