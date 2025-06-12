@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AffordHostel - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6a1b9a;
+            --secondary: #26a69a;
+            --accent: #ffab00;
+            --light: #f5f5f7;
+            --dark: #2c2c2c;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --gray: #9e9e9e;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9fb;
+            color: var(--dark);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: var(--dark);
+            color: white;
+            padding: 20px 0;
+            transition: var(--transition);
+            overflow-y: auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 22px;
+            color: white;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo i {
+            color: var(--secondary);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 20px;
+        }
+        
+        .user-details h3 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .user-details span {
+            font-size: 0.9rem;
+            color: #aaa;
+            display: block;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0 10px;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ddd;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: rgba(106, 27, 154, 0.3);
+            color: white;
+        }
+        
+        .sidebar-menu a i {
+            width: 24px;
+            text-align: center;
+        }
+        
+        .role-switch {
+            margin-top: 30px;
+            padding: 0 20px;
+        }
+        
+        .role-switch h4 {
+            margin-bottom: 10px;
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .role-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .role-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #ddd;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .role-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .topbar {
+            background: white;
+            box-shadow: var(--shadow);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            border-radius: 30px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+        
+        .search-bar input {
+            border: none;
+            background: transparent;
+            padding: 5px 10px;
+            width: 100%;
+            outline: none;
+        }
+        
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .notification-btn {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .dashboard-section {
+            display: none;
+        }
+        
+        .dashboard-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-header h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-student .stat-icon {
+            background: rgba(106, 27, 154, 0.1);
+            color: var(--primary);
+        }
+        
+        .stat-landlord .stat-icon {
+            background: rgba(38, 166, 154, 0.1);
+            color: var(--secondary);
+        }
+        
+        .stat-agent .stat-icon {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-admin .stat-icon {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-header h2 {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            color: var(--gray);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-confirmed {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+        
+        .status-rejected {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            transition: var(--transition);
+        }
+        
+        .action-btn:hover {
+            color: var(--primary);
+        }
+        
+        .hostel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .hostel-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .hostel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .hostel-img {
+            height: 180px;
+            background: #eee;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .hostel-info {
+            padding: 20px;
+        }
+        
+        .hostel-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .hostel-price {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .hostel-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .amenity {
+            background: rgba(38, 166, 154, 0.1);
+            color: var(--secondary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-header h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 600;
+            color: white;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .avatar-edit {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+        
+        .form-section h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 27, 154, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .danger-zone {
+            background: rgba(244, 67, 54, 0.05);
+            border: 1px solid rgba(244, 67, 54, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+        }
+        
+        .danger-zone h2 {
+            color: var(--danger);
+            margin-bottom: 15px;
+        }
+        
+        .danger-zone p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .logo span, .user-details, .role-switch, .menu-text {
+                display: none;
+            }
+            
+            .logo {
+                justify-content: center;
+                padding: 0 0 20px;
+            }
+            
+            .user-info {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .sidebar-menu a {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 10px 0;
+            }
+            
+            .logo {
+                padding: 0 20px 10px;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .sidebar-menu {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .sidebar-menu li {
+                margin: 0 5px;
+            }
+            
+            .sidebar-menu a {
+                padding: 10px 15px;
+            }
+            
+            .role-switch {
+                display: none;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-home"></i>
+            <span>AffordHostel</span>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">JD</div>
+            <div class="user-details">
+                <h3>John Doe</h3>
+                <span>Student</span>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active" data-section="student-dashboard"><i class="fas fa-home"></i> <span class="menu-text">Dashboard</span></a></li>
+            <li><a href="#" data-section="student-bookings"><i class="fas fa-calendar-check"></i> <span class="menu-text">Bookings</span></a></li>
+            <li><a href="#" data-section="student-wishlist"><i class="fas fa-heart"></i> <span class="menu-text">Wishlist</span></a></li>
+            <li><a href="#" data-section="notifications"><i class="fas fa-bell"></i> <span class="menu-text">Notifications</span></a></li>
+            <li><a href="#" data-section="profile"><i class="fas fa-user"></i> <span class="menu-text">Profile</span></a></li>
+            <li><a href="#" data-section="settings"><i class="fas fa-cog"></i> <span class="menu-text">Settings</span></a></li>
+        </ul>
+        
+        <div class="role-switch">
+            <h4>Switch Role</h4>
+            <div class="role-buttons">
+                <button class="role-btn active">Student</button>
+                <button class="role-btn">Landlord</button>
+                <button class="role-btn">Agent</button>
+                <button class="role-btn">Admin</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            
+            <div class="topbar-actions">
+                <div class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Student Dashboard -->
+            <div id="student-dashboard" class="dashboard-section active">
+                <div class="dashboard-header">
+                    <h1>Student Dashboard</h1>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Book Hostel
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card stat-student">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>2</h3>
+                            <p>Active Bookings</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>5</h3>
+                            <p>Wishlisted Hostels</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>3</h3>
+                            <p>Notifications</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>4.7</h3>
+                            <p>Average Rating</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Upcoming Bookings</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hostel</th>
+                                    <th>Room Type</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Umoja Hostels</td>
+                                    <td>Single Room</td>
+                                    <td>15 Aug 2023</td>
+                                    <td>15 Dec 2023</td>
+                                    <td>Ksh 75,000</td>
+                                    <td><span class="status status-confirmed">Confirmed</span></td>
+                                    <td>
+                                        <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                        <button class="action-btn"><i class="fas fa-print"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Prestige Hostels</td>
+                                    <td>Shared Room</td>
+                                    <td>1 Sep 2023</td>
+                                    <td>31 Dec 2023</td>
+                                    <td>Ksh 72,000</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="action-btn"><i class="fas fa-eye"></i></button>
+                                        <button class="action-btn"><i class="fas fa-times"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recently Viewed Hostels</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="hostel-grid">
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Umoja Hostels</h3>
+                                <div class="hostel-price">Ksh 15,000/month</div>
+                                <div class="hostel-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> Near UoN</span>
+                                    <span><i class="fas fa-star"></i> 4.7</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%;">View Details</button>
+                            </div>
+                        </div>
+                        
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Kilele Hostels</h3>
+                                <div class="hostel-price">Ksh 12,000/month</div>
+                                <div class="hostel-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> Near Kenyatta U</span>
+                                    <span><i class="fas fa-star"></i> 4.5</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%;">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Landlord Dashboard -->
+            <div id="landlord-dashboard" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h1>Landlord Dashboard</h1>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Hostel
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card stat-landlord">
+                        <div class="stat-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>4</h3>
+                            <p>Properties Listed</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>12</h3>
+                            <p>Active Bookings</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>5</h3>
+                            <p>Pending Requests</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Ksh 480K</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Booking Requests</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hostel</th>
+                                    <th>Student</th>
+                                    <th>Request Date</th>
+                                    <th>Duration</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Umoja Hostels</td>
+                                    <td>John Mwangi</td>
+                                    <td>10 Jul 2023</td>
+                                    <td>4 months</td>
+                                    <td>Ksh 60,000</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Approve</button>
+                                        <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Reject</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Prestige Hostels</td>
+                                    <td>Sarah Kamau</td>
+                                    <td>8 Jul 2023</td>
+                                    <td>6 months</td>
+                                    <td>Ksh 108,000</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Approve</button>
+                                        <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Reject</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Your Hostels</h2>
+                        <button class="btn btn-outline">Manage All</button>
+                    </div>
+                    
+                    <div class="hostel-grid">
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Umoja Hostels</h3>
+                                <div class="hostel-price">Ksh 15,000/month</div>
+                                <div class="hostel-meta">
+                                    <span>5 Rooms</span>
+                                    <span>90% Occupied</span>
+                                </div>
+                                <div class="amenities">
+                                    <span class="amenity">WiFi</span>
+                                    <span class="amenity">Laundry</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;">Edit Listing</button>
+                            </div>
+                        </div>
+                        
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Greenview Apartments</h3>
+                                <div class="hostel-price">Ksh 20,000/month</div>
+                                <div class="hostel-meta">
+                                    <span>8 Rooms</span>
+                                    <span>75% Occupied</span>
+                                </div>
+                                <div class="amenities">
+                                    <span class="amenity">Parking</span>
+                                    <span class="amenity">Gym</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;">Edit Listing</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Agent Dashboard -->
+            <div id="agent-dashboard" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h1>Agent Dashboard</h1>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Listing
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card stat-agent">
+                        <div class="stat-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>8</h3>
+                            <p>Pending Verifications</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>24</h3>
+                            <p>Verified Properties</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>18</h3>
+                            <p>Landlords Managed</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>92%</h3>
+                            <p>Verification Rate</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Verification Queue</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hostel</th>
+                                    <th>Landlord</th>
+                                    <th>Submitted On</th>
+                                    <th>Documents</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Kilele Hostels</td>
+                                    <td>James Omondi</td>
+                                    <td>12 Jul 2023</td>
+                                    <td>3 Files</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Review</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Sunset View</td>
+                                    <td>Mary Wanjiku</td>
+                                    <td>10 Jul 2023</td>
+                                    <td>4 Files</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Review</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Haven Residences</td>
+                                    <td>Robert Mutua</td>
+                                    <td>8 Jul 2023</td>
+                                    <td>2 Files</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Review</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recently Verified</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="hostel-grid">
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Kilele Hostels</h3>
+                                <div class="hostel-meta">
+                                    <span>Verified: 5 Jul 2023</span>
+                                    <span><i class="fas fa-star"></i> 4.5</span>
+                                </div>
+                                <div class="amenities">
+                                    <span class="amenity">Parking</span>
+                                    <span class="amenity">Gym</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;">View Details</button>
+                            </div>
+                        </div>
+                        
+                        <div class="hostel-card">
+                            <div class="hostel-img" style="background-image: url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80');"></div>
+                            <div class="hostel-info">
+                                <h3 class="hostel-title">Prestige Hostels</h3>
+                                <div class="hostel-meta">
+                                    <span>Verified: 2 Jul 2023</span>
+                                    <span><i class="fas fa-star"></i> 4.8</span>
+                                </div>
+                                <div class="amenities">
+                                    <span class="amenity">Pool</span>
+                                    <span class="amenity">Gym</span>
+                                </div>
+                                <button class="btn btn-outline" style="width: 100%; margin-top: 10px;">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Dashboard -->
+            <div id="admin-dashboard" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h1>Admin Dashboard</h1>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card stat-admin">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>1,248</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>324</h3>
+                            <p>Listed Hostels</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Ksh 4.8M</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>78%</h3>
+                            <p>Occupancy Rate</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recent Activity</h2>
+                        <button class="btn btn-outline">View All</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sarah Kamau</td>
+                                    <td>New Booking</td>
+                                    <td>Umoja Hostels - Ksh 60,000</td>
+                                    <td>10 minutes ago</td>
+                                </tr>
+                                <tr>
+                                    <td>James Omondi</td>
+                                    <td>Hostel Added</td>
+                                    <td>Sunset View Hostels</td>
+                                    <td>2 hours ago</td>
+                                </tr>
+                                <tr>
+                                    <td>Agent Brian</td>
+                                    <td>Hostel Verified</td>
+                                    <td>Kilele Hostels</td>
+                                    <td>5 hours ago</td>
+                                </tr>
+                                <tr>
+                                    <td>John Mwangi</td>
+                                    <td>Account Created</td>
+                                    <td>Student</td>
+                                    <td>Yesterday</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>User Management</h2>
+                        <button class="btn btn-outline">View All Users</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sarah Kamau</td>
+                                    <td>sarah@example.com</td>
+                                    <td>Student</td>
+                                    <td><span class="status status-confirmed">Active</span></td>
+                                    <td>15 Jun 2023</td>
+                                    <td>
+                                        <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                        <button class="action-btn"><i class="fas fa-ban"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>James Omondi</td>
+                                    <td>james@example.com</td>
+                                    <td>Landlord</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td>10 Jul 2023</td>
+                                    <td>
+                                        <button class="action-btn"><i class="fas fa-check"></i></button>
+                                        <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Agent Brian</td>
+                                    <td>brian@example.com</td>
+                                    <td>Agent</td>
+                                    <td><span class="status status-confirmed">Active</span></td>
+                                    <td>5 May 2023</td>
+                                    <td>
+                                        <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                        <button class="action-btn"><i class="fas fa-ban"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Settings -->
+            <div id="settings" class="dashboard-section">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            JD
+                            <div class="avatar-edit">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <h1>Account Settings</h1>
+                        <p>Manage your account information and preferences</p>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h2>Personal Information</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" class="form-control" value="John">
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" class="form-control" value="Doe">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" class="form-control" value="john.doe@example.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" class="form-control" value="+254712345678">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>University</label>
+                            <select class="form-control">
+                                <option>University of Nairobi</option>
+                                <option>Kenyatta University</option>
+                                <option>JKUAT</option>
+                                <option selected>Mount Kenya University</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Student ID</label>
+                            <input type="text" class="form-control" value="MKU12345">
+                        </div>
+                        
+                        <div style="text-align: right; margin-top: 20px;">
+                            <button class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h2>Security Settings</h2>
+                        
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <div style="flex: 1;">
+                                    <input type="password" class="form-control" value="••••••••" readonly>
+                                </div>
+                                <button class="btn btn-outline">Change Password</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Two-Factor Authentication</label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <p>Add an extra layer of security to your account</p>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Login Activity</label>
+                            <div style="background: #f9f9f9; border-radius: 8px; padding: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <div>
+                                        <p><strong>Chrome, Windows</strong></p>
+                                        <p>Nairobi, Kenya • Just now</p>
+                                    </div>
+                                    <button class="btn btn-outline">Logout</button>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div>
+                                        <p><strong>Safari, iOS</strong></p>
+                                        <p>Nairobi, Kenya • 2 days ago</p>
+                                    </div>
+                                    <button class="btn btn-outline">Logout</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section danger-zone">
+                        <h2>Danger Zone</h2>
+                        <p>Deleting your account is permanent and cannot be undone. All your data will be erased.</p>
+                        
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button class="btn" style="background: var(--danger); color: white;">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.sidebar-menu a');
+            const dashboardSections = document.querySelectorAll('.dashboard-section');
+            const roleButtons = document.querySelectorAll('.role-btn');
+            
+            // Function to show a specific dashboard section
+            function showSection(sectionId) {
+                dashboardSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+            }
+            
+            // Menu navigation
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active menu item
+                    menuLinks.forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+            
+            // Role switching
+            roleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active role button
+                    roleButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Update user role in UI
+                    const role = this.textContent;
+                    document.querySelector('.user-details span').textContent = role;
+                    
+                    // Show corresponding dashboard
+                    if(role === 'Student') showSection('student-dashboard');
+                    if(role === 'Landlord') showSection('landlord-dashboard');
+                    if(role === 'Agent') showSection('agent-dashboard');
+                    if(role === 'Admin') showSection('admin-dashboard');
+                    
+                    // Update menu to show first item as active
+                    menuLinks.forEach((item, index) => {
+                        if(index === 0) item.classList.add('active');
+                        else item.classList.remove('active');
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
