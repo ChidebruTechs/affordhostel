@@ -1,0 +1,336 @@
+import React from 'react';
+import { Users, Target, Heart, Award, CheckCircle, Calendar, TrendingUp, Shield } from 'lucide-react';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
+
+const AboutPage: React.FC = () => {
+  const stats = [
+    { number: '1,200+', label: 'Students Served', icon: Users },
+    { number: '300+', label: 'Verified Hostels', icon: Shield },
+    { number: '50+', label: 'Partner Universities', icon: Award },
+    { number: '4.8/5', label: 'Average Rating', icon: TrendingUp }
+  ];
+
+  const values = [
+    {
+      icon: Target,
+      title: 'Transparency',
+      description: 'We believe in honest pricing, clear terms, and transparent processes. No hidden fees, no surprises.',
+      color: 'purple'
+    },
+    {
+      icon: Shield,
+      title: 'Safety First',
+      description: 'Every hostel on our platform is verified for safety, security, and quality standards.',
+      color: 'teal'
+    },
+    {
+      icon: Heart,
+      title: 'Student-Centric',
+      description: 'Everything we do is designed with students in mind - from affordability to convenience.',
+      color: 'orange'
+    },
+    {
+      icon: Users,
+      title: 'Community',
+      description: 'We foster a supportive community of students, landlords, and agents working together.',
+      color: 'green'
+    }
+  ];
+
+  const timeline = [
+    {
+      year: '2023',
+      title: 'The Beginning',
+      description: 'AffordHostel was founded with a simple mission: make hostel booking easier for Kenyan students.',
+      milestone: 'Company Founded'
+    },
+    {
+      year: '2023',
+      title: 'First Partnerships',
+      description: 'We partnered with 5 major universities and onboarded our first 50 verified hostels.',
+      milestone: '50 Hostels Listed'
+    },
+    {
+      year: '2023',
+      title: 'Growing Community',
+      description: 'Reached 500 registered students and introduced our agent verification program.',
+      milestone: '500 Students'
+    },
+    {
+      year: '2024',
+      title: 'Platform Expansion',
+      description: 'Launched mobile app and expanded to cover 15+ universities across Kenya.',
+      milestone: 'Mobile App Launch'
+    }
+  ];
+
+  const team = [
+    {
+      name: 'Sarah Wanjiku',
+      role: 'CEO & Co-Founder',
+      bio: 'Former university student who experienced the challenges of finding quality accommodation firsthand.',
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      name: 'James Kiprotich',
+      role: 'CTO & Co-Founder',
+      bio: 'Tech enthusiast with 8+ years of experience building scalable platforms for the African market.',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      name: 'Grace Akinyi',
+      role: 'Head of Operations',
+      bio: 'Operations expert ensuring smooth platform functionality and excellent user experience.',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      name: 'Michael Omondi',
+      role: 'Head of Partnerships',
+      bio: 'Building relationships with universities, landlords, and agents across Kenya.',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+    }
+  ];
+
+  const features = [
+    'Verified hostel listings with real photos',
+    'Transparent pricing with no hidden fees',
+    'Secure online booking and payment',
+    '24/7 customer support',
+    'University-specific search filters',
+    'Student reviews and ratings',
+    'Mobile-friendly platform',
+    'Agent verification program'
+  ];
+
+  return (
+    <div className="pt-20 min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-purple-600 via-purple-700 to-teal-600 text-white py-20">
+        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            About AffordHostel
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-purple-100">
+            Revolutionizing student accommodation in Kenya through technology, transparency, and trust
+          </p>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="group">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                  <stat.icon className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">{stat.number}</div>
+                <div className="text-gray-600 font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12">
+            <Card className="p-8 text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Target className="h-8 w-8 text-purple-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
+              <p className="text-gray-600 leading-relaxed">
+                To simplify and democratize student accommodation in Kenya by providing a transparent, 
+                secure, and user-friendly platform that connects students with quality, affordable hostels 
+                near their universities.
+              </p>
+            </Card>
+
+            <Card className="p-8 text-center">
+              <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Award className="h-8 w-8 text-teal-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h2>
+              <p className="text-gray-600 leading-relaxed">
+                To become the leading student accommodation platform in East Africa, empowering students 
+                to focus on their education while we take care of their housing needs through innovation 
+                and excellence.
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Story */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Story</h2>
+            <p className="text-xl text-gray-600">
+              Born from personal experience, built with passion
+            </p>
+          </div>
+
+          <Card className="p-8 md:p-12">
+            <div className="prose prose-lg max-w-none">
+              <p className="text-gray-600 leading-relaxed mb-6">
+                AffordHostel was born out of frustration. As university students in Nairobi, our founders 
+                experienced firsthand the challenges of finding safe, affordable, and quality accommodation 
+                near campus. The process was often opaque, time-consuming, and filled with unpleasant surprises.
+              </p>
+              
+              <p className="text-gray-600 leading-relaxed mb-6">
+                After countless hours spent visiting questionable hostels, dealing with unreliable landlords, 
+                and facing hidden fees, we realized that thousands of other students were going through the 
+                same struggles. That's when the idea for AffordHostel was born.
+              </p>
+              
+              <p className="text-gray-600 leading-relaxed">
+                Today, we're proud to serve over 1,200 students across Kenya, working with 300+ verified 
+                hostels and 50+ partner universities. Our platform has facilitated thousands of successful 
+                bookings, helping students find their home away from home with confidence and ease.
+              </p>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
+            <p className="text-xl text-gray-600">
+              The principles that guide everything we do
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <Card key={index} hover className="p-6 text-center">
+                <div className={`w-16 h-16 bg-${value.color}-100 rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  <value.icon className={`h-8 w-8 text-${value.color}-600`} />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{value.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{value.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Timeline */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Journey</h2>
+            <p className="text-xl text-gray-600">
+              Key milestones in our growth story
+            </p>
+          </div>
+
+          <div className="space-y-12">
+            {timeline.map((item, index) => (
+              <div key={index} className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                <div className="flex-1">
+                  <Card className={`p-6 ${index % 2 === 0 ? 'mr-8' : 'ml-8'}`}>
+                    <div className="flex items-center mb-3">
+                      <Calendar className="h-5 w-5 text-purple-600 mr-2" />
+                      <span className="text-purple-600 font-semibold">{item.year}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
+                    <p className="text-gray-600 mb-3">{item.description}</p>
+                    <div className="inline-block px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-medium">
+                      {item.milestone}
+                    </div>
+                  </Card>
+                </div>
+                <div className="w-4 h-4 bg-purple-600 rounded-full border-4 border-white shadow-lg z-10"></div>
+                <div className="flex-1"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+            <p className="text-xl text-gray-600">
+              The passionate people behind AffordHostel
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {team.map((member, index) => (
+              <Card key={index} hover className="p-6 text-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4">
+                  <img 
+                    src={member.image} 
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
+                <p className="text-purple-600 font-medium mb-3">{member.role}</p>
+                <p className="text-gray-600 text-sm leading-relaxed">{member.bio}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">What We Offer</h2>
+            <p className="text-xl text-gray-600">
+              Comprehensive features designed for student success
+            </p>
+          </div>
+
+          <Card className="p-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-purple-600 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold mb-6">
+            Ready to Find Your Perfect Hostel?
+          </h2>
+          <p className="text-xl mb-8 text-purple-100">
+            Join thousands of students who have found their ideal accommodation through AffordHostel
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
+              Browse Hostels
+            </Button>
+            <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-purple-600">
+              Join as Landlord
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default AboutPage;

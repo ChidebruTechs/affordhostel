@@ -5,7 +5,10 @@ import Sidebar from './components/layout/Sidebar';
 import HomePage from './components/pages/HomePage';
 import LoginPage from './components/pages/LoginPage';
 import SignupPage from './components/pages/SignupPage';
+import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import HostelsPage from './components/pages/HostelsPage';
+import ContactPage from './components/pages/ContactPage';
+import AboutPage from './components/pages/AboutPage';
 import SettingsPage from './components/pages/SettingsPage';
 import StudentDashboard from './components/dashboard/StudentDashboard';
 import LandlordDashboard from './components/dashboard/LandlordDashboard';
@@ -40,8 +43,14 @@ const AppContent: React.FC = () => {
         return <LoginPage />;
       case 'signup':
         return <SignupPage />;
+      case 'forgot-password':
+        return <ForgotPasswordPage />;
       case 'hostels':
         return <HostelsPage />;
+      case 'contact':
+        return <ContactPage />;
+      case 'about':
+        return <AboutPage />;
       case 'dashboard':
         return renderDashboard();
       case 'settings':
