@@ -70,7 +70,7 @@ const AboutPage: React.FC = () => {
       name: 'Sarah Wanjiku',
       role: 'CEO & Co-Founder',
       bio: 'Former university student who experienced the challenges of finding quality accommodation firsthand.',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+      image: 'https://images.unsplash.com/photo-1494790158755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
     },
     {
       name: 'James Kiprotich',

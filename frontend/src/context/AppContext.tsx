@@ -37,10 +37,10 @@ const mockHostels: Hostel[] = [
   {
     id: '1',
     name: 'Umoja Hostels',
-    description: 'Modern, comfortable hostel near University of Nairobi with excellent amenities.',
+    description: 'Modern, comfortable hostel near Maseno University with excellent amenities.',
     price: 15000,
-    location: 'Near University of Nairobi',
-    university: 'University of Nairobi',
+    location: 'Niles',
+    university: 'Maseno University',
     images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
     amenities: ['WiFi', 'Laundry', '24/7 Security', 'Study Area'],
     rating: 4.7,
@@ -56,10 +56,10 @@ const mockHostels: Hostel[] = [
   {
     id: '2',
     name: 'Kilele Hostels',
-    description: 'Affordable accommodation with modern facilities near Kenyatta University.',
+    description: 'Affordable accommodation with modern facilities near Maseno University.',
     price: 12000,
-    location: 'Near Kenyatta University',
-    university: 'Kenyatta University',
+    location: 'Market',
+    university: 'Maseno University',
     images: ['https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
     amenities: ['Parking', 'Gym', 'Study Area', 'WiFi'],
     rating: 4.5,
@@ -76,8 +76,8 @@ const mockHostels: Hostel[] = [
     name: 'Prestige Hostels',
     description: 'Premium hostel with luxury amenities including swimming pool and gym.',
     price: 18000,
-    location: 'Near Mount Kenya University',
-    university: 'Mount Kenya University',
+    location: 'Nyawita',
+    university: 'Maseno University',
     images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
     amenities: ['Swimming Pool', 'Gym', 'Study Area', 'Cafeteria'],
     rating: 4.8,
@@ -91,11 +91,11 @@ const mockHostels: Hostel[] = [
   },
   {
     id: '4',
-    name: 'Greenview Apartments',
+    name: 'Jagero Apartments',
     description: 'Spacious apartments with garden views and modern amenities.',
     price: 20000,
-    location: 'Near JKUAT',
-    university: 'JKUAT',
+    location: 'Vikam',
+    university: 'Maseno University',
     images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
     amenities: ['Garden', 'Parking', 'WiFi', 'Kitchen'],
     rating: 4.6,
@@ -103,7 +103,43 @@ const mockHostels: Hostel[] = [
     roomTypes: [
       { id: '1', type: 'Studio Apartment', price: 20000, available: 4, total: 10, features: ['Kitchenette', 'Private bathroom', 'Balcony'] }
     ],
-    landlordId: '2',
+    landlordId: '1',
+    verified: true,
+    available: true
+  },
+    {
+    id: '5',
+    name: 'Jodwar Hostels',
+    description: 'Spacious apartments with garden views and modern amenities.',
+    price: 20000,
+    location: 'Daily Nation',
+    university: 'Maseno University',
+    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
+    amenities: ['Garden', 'Parking', 'WiFi', 'Kitchen'],
+    rating: 4.6,
+    reviews: 15,
+    roomTypes: [
+      { id: '1', type: 'Studio Apartment', price: 20000, available: 4, total: 10, features: ['Kitchenette', 'Private bathroom', 'Balcony'] }
+    ],
+    landlordId: '1',
+    verified: true,
+    available: true
+  },
+      {
+    id: '6',
+    name: 'Prodigal Daughter',
+    description: 'Spacious apartments with garden views and modern amenities.',
+    price: 20000,
+    location: 'Green Valley (GV)',
+    university: 'Maseno University',
+    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
+    amenities: ['Garden', 'Parking', 'WiFi', 'Kitchen'],
+    rating: 4.6,
+    reviews: 15,
+    roomTypes: [
+      { id: '1', type: 'Studio Apartment', price: 20000, available: 4, total: 10, features: ['Kitchenette', 'Private bathroom', 'Balcony'] }
+    ],
+    landlordId: '1',
     verified: true,
     available: true
   }
