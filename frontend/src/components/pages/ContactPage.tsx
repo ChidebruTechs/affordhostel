@@ -14,6 +14,7 @@ const ContactPage: React.FC = () => {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -31,6 +32,13 @@ const ContactPage: React.FC = () => {
       setIsLoading(false);
       setIsSubmitted(true);
     }, 2000);
+  };
+
+  const handleQuickSupport = (category: string) => {
+    setSelectedCategory(category);
+    setFormData(prev => ({ ...prev, category }));
+    // Scroll to form
+    document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const contactInfo = [
@@ -61,10 +69,34 @@ const ContactPage: React.FC = () => {
   ];
 
   const supportCategories = [
-    { value: 'general', label: 'General Inquiry', icon: MessageSquare },
-    { value: 'booking', label: 'Booking Support', icon: CheckCircle },
-    { value: 'technical', label: 'Technical Issue', icon: Bug },
-    { value: 'feedback', label: 'Feedback', icon: Star }
+    { 
+      value: 'general', 
+      label: 'General Inquiry', 
+      icon: MessageSquare,
+      description: 'General questions about our platform and services',
+      color: 'blue'
+    },
+    { 
+      value: 'booking', 
+      label: 'Booking Support', 
+      icon: CheckCircle,
+      description: 'Help with bookings, payments, and reservations',
+      color: 'green'
+    },
+    { 
+      value: 'technical', 
+      label: 'Technical Issue', 
+      icon: Bug,
+      description: 'Report bugs, website issues, or technical problems',
+      color: 'red'
+    },
+    { 
+      value: 'feedback', 
+      label: 'Feedback', 
+      icon: Star,
+      description: 'Share your suggestions and feedback with us',
+      color: 'yellow'
+    }
   ];
 
   const faqs = [
@@ -144,9 +176,43 @@ const ContactPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Quick Support Categories */}
+        <div className="mb-16">
+          <Card className="p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Quick Support</h2>
+              <p className="text-gray-600">
+                Choose a category for faster assistance
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {supportCategories.map((category, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleQuickSupport(category.value)}
+                  className={`p-6 border-2 rounded-lg hover:shadow-lg transition-all duration-200 cursor-pointer group ${
+                    selectedCategory === category.value 
+                      ? `border-${category.color}-500 bg-${category.color}-50` 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className={`w-12 h-12 bg-${category.color}-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-${category.color}-200 transition-colors`}>
+                      <category.icon className={`h-6 w-6 text-${category.color}-600`} />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{category.label}</h3>
+                    <p className="text-sm text-gray-600">{category.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <Card className="p-8">
+          <Card className="p-8" id="contact-form">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Send us a Message</h2>
               <p className="text-gray-600">
@@ -275,34 +341,6 @@ const ContactPage: React.FC = () => {
               </div>
             </Card>
           </div>
-        </div>
-
-        {/* Support Categories */}
-        <div className="mt-16">
-          <Card className="p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Quick Support</h2>
-              <p className="text-gray-600">
-                Choose a category for faster assistance
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {supportCategories.map((category, index) => (
-                <div
-                  key={index}
-                  className="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 cursor-pointer group"
-                >
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-200 transition-colors">
-                      <category.icon className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900">{category.label}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
     </div>

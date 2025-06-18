@@ -30,16 +30,16 @@ const Header: React.FC = () => {
               Home
             </button>
             <button 
-              onClick={() => setCurrentPage('about')}
-              className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
-            >
-              About
-            </button>
-            <button 
               onClick={() => setCurrentPage('hostels')}
               className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
             >
               Hostels
+            </button>
+            <button 
+              onClick={() => setCurrentPage('about')}
+              className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+            >
+              About
             </button>
             <button 
               onClick={() => setCurrentPage('contact')}

@@ -1,15 +1,18 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 import Sidebar from './components/layout/Sidebar';
 import HomePage from './components/pages/HomePage';
 import LoginPage from './components/pages/LoginPage';
 import SignupPage from './components/pages/SignupPage';
 import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import HostelsPage from './components/pages/HostelsPage';
+import HostelDetailPage from './components/pages/HostelDetailPage';
 import ContactPage from './components/pages/ContactPage';
 import AboutPage from './components/pages/AboutPage';
 import SettingsPage from './components/pages/SettingsPage';
+import ProfilePage from './components/pages/ProfilePage';
 import StudentDashboard from './components/dashboard/StudentDashboard';
 import LandlordDashboard from './components/dashboard/LandlordDashboard';
 import AgentDashboard from './components/dashboard/AgentDashboard';
@@ -47,12 +50,16 @@ const AppContent: React.FC = () => {
         return <ForgotPasswordPage />;
       case 'hostels':
         return <HostelsPage />;
+      case 'hostel-detail':
+        return <HostelDetailPage />;
       case 'contact':
         return <ContactPage />;
       case 'about':
         return <AboutPage />;
       case 'dashboard':
         return renderDashboard();
+      case 'profile':
+        return <ProfilePage />;
       case 'settings':
         return <SettingsPage />;
       case 'notifications':
@@ -174,7 +181,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  if (isAuthenticated && ['dashboard', 'settings', 'notifications', 'bookings', 'wishlist'].includes(currentPage)) {
+  if (isAuthenticated && ['dashboard', 'profile', 'settings', 'notifications', 'bookings', 'wishlist'].includes(currentPage)) {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
@@ -201,11 +208,12 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
-      <main>
+      <main className="flex-1">
         {renderContent()}
       </main>
+      <Footer />
     </div>
   );
 };
