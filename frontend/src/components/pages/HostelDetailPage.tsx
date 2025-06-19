@@ -3,17 +3,23 @@ import { Star, MapPin, Wifi, Car, Dumbbell, Book, Shield, Heart, Share2, Calenda
 import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import CheckoutPage from './CheckoutPage';
 
 const HostelDetailPage: React.FC = () => {
-  const { setCurrentPage, hostels } = useApp();
+  const { setCurrentPage, hostels, isAuthenticated, addToWishlist, removeFromWishlist, isInWishlist, addReview, getHostelReviews } = useApp();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedRoomType, setSelectedRoomType] = useState(0);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   // For demo purposes, using the first hostel
   const hostel = hostels[0];
+  const reviews = getHostelReviews(hostel.id);
+  const inWishlist = isInWishlist(hostel.id);
 
   const amenityIcons: Record<string, any> = {
     'WiFi': Wifi,
@@ -26,36 +32,6 @@ const HostelDetailPage: React.FC = () => {
     'Cafeteria': Users
   };
 
-  const reviews = [
-    {
-      id: 1,
-      name: 'John Mwangi',
-      avatar: 'JM',
-      rating: 5,
-      date: '2 weeks ago',
-      comment: 'Great hostel with clean facilities and friendly staff. The location is perfect for university students. WiFi is reliable and the study area is well-equipped.',
-      helpful: 12
-    },
-    {
-      id: 2,
-      name: 'Grace Akinyi',
-      avatar: 'GA',
-      rating: 4,
-      date: '1 month ago',
-      comment: 'The study area is well-equipped and quiet. Internet is reliable which is great for online classes. Only issue is the laundry can get crowded during weekends.',
-      helpful: 8
-    },
-    {
-      id: 3,
-      name: 'Michael Ochieng',
-      avatar: 'MO',
-      rating: 5,
-      date: '2 months ago',
-      comment: 'Excellent security and the rooms are spacious. The management is very responsive to any issues. Would definitely recommend to other students.',
-      helpful: 15
-    }
-  ];
-
   const calculateTotal = () => {
     if (!checkIn || !checkOut) return 0;
     const start = new Date(checkIn);
@@ -63,6 +39,86 @@ const HostelDetailPage: React.FC = () => {
     const months = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30));
     return hostel.roomTypes[selectedRoomType].price * months;
   };
+
+  const handleWishlistToggle = () => {
+    if (!isAuthenticated) {
+      setCurrentPage('login');
+      return;
+    }
+
+    if (inWishlist) {
+      removeFromWishlist(hostel.id);
+    } else {
+      addToWishlist(hostel.id);
+    }
+  };
+
+  const handleBookNow = () => {
+    if (!isAuthenticated) {
+      setCurrentPage('login');
+      return;
+    }
+
+    if (!checkIn || !checkOut) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
+
+    const duration = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    const bookingData = {
+      hostelId: hostel.id,
+      hostelName: hostel.name,
+      roomType: hostel.roomTypes[selectedRoomType].type,
+      checkIn,
+      checkOut,
+      amount: calculateTotal(),
+      duration
+    };
+
+    setShowCheckout(true);
+  };
+
+  const handleSubmitReview = () => {
+    if (!isAuthenticated) {
+      setCurrentPage('login');
+      return;
+    }
+
+    if (!newReview.comment.trim()) {
+      alert('Please write a review comment');
+      return;
+    }
+
+    addReview(hostel.id, newReview.rating, newReview.comment);
+    setNewReview({ rating: 5, comment: '' });
+    setShowReviewForm(false);
+  };
+
+  if (showCheckout) {
+    const duration = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    const bookingData = {
+      hostelId: hostel.id,
+      hostelName: hostel.name,
+      roomType: hostel.roomTypes[selectedRoomType].type,
+      checkIn,
+      checkOut,
+      amount: calculateTotal(),
+      duration
+    };
+
+    return (
+      <div className="pt-20 min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <CheckoutPage 
+            bookingData={bookingData}
+            onBack={() => setShowCheckout(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
@@ -89,8 +145,11 @@ const HostelDetailPage: React.FC = () => {
                 <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all">
                   <Share2 className="h-5 w-5 text-gray-600" />
                 </button>
-                <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all">
-                  <Heart className="h-5 w-5 text-gray-600 hover:text-red-500" />
+                <button 
+                  onClick={handleWishlistToggle}
+                  className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all"
+                >
+                  <Heart className={`h-5 w-5 ${inWishlist ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
                 </button>
               </div>
             </div>
@@ -131,7 +190,7 @@ const HostelDetailPage: React.FC = () => {
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
                       <span>{hostel.rating}</span>
-                      <span>({hostel.reviews} reviews)</span>
+                      <span>({reviews.length} reviews)</span>
                     </div>
                   </div>
                 </div>
@@ -224,24 +283,79 @@ const HostelDetailPage: React.FC = () => {
             <Card className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-900">Reviews</h3>
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="font-semibold">{hostel.rating}</span>
-                  <span className="text-gray-600">({hostel.reviews} reviews)</span>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                    <span className="font-semibold">{hostel.rating}</span>
+                    <span className="text-gray-600">({reviews.length} reviews)</span>
+                  </div>
+                  {isAuthenticated && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                    >
+                      Write Review
+                    </Button>
+                  )}
                 </div>
               </div>
+
+              {/* Review Form */}
+              {showReviewForm && (
+                <Card className="p-6 mb-6 bg-purple-50 border border-purple-200">
+                  <h4 className="font-semibold text-gray-900 mb-4">Write a Review</h4>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setNewReview({ ...newReview, rating: star })}
+                          className="focus:outline-none"
+                        >
+                          <Star 
+                            className={`h-6 w-6 ${
+                              star <= newReview.rating 
+                                ? 'text-yellow-400 fill-current' 
+                                : 'text-gray-300'
+                            }`} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                    <textarea
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="Share your experience with this hostel..."
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button onClick={handleSubmitReview}>Submit Review</Button>
+                    <Button variant="outline" onClick={() => setShowReviewForm(false)}>Cancel</Button>
+                  </div>
+                </Card>
+              )}
 
               <div className="space-y-6">
                 {reviews.map((review) => (
                   <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
                     <div className="flex items-start space-x-4">
                       <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600">
-                        {review.avatar}
+                        {review.userName.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{review.name}</h4>
+                            <h4 className="font-semibold text-gray-900">{review.userName}</h4>
                             <div className="flex items-center space-x-2">
                               <div className="flex">
                                 {[...Array(5)].map((_, i) => (
@@ -255,7 +369,7 @@ const HostelDetailPage: React.FC = () => {
                                   />
                                 ))}
                               </div>
-                              <span className="text-gray-500 text-sm">{review.date}</span>
+                              <span className="text-gray-500 text-sm">{review.createdAt.toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
@@ -267,10 +381,6 @@ const HostelDetailPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-6 text-center">
-                <Button variant="outline">View All Reviews</Button>
               </div>
             </Card>
           </div>
@@ -348,13 +458,13 @@ const HostelDetailPage: React.FC = () => {
               )}
 
               <div className="space-y-3">
-                <Button className="w-full">
+                <Button className="w-full" onClick={handleBookNow}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Book Now
                 </Button>
-                <Button variant="outline" className="w-full">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Add to Wishlist
+                <Button variant="outline" className="w-full" onClick={handleWishlistToggle}>
+                  <Heart className={`h-4 w-4 mr-2 ${inWishlist ? 'fill-current' : ''}`} />
+                  {inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 </Button>
               </div>
 

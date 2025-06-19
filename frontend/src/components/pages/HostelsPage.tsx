@@ -3,10 +3,9 @@ import { Search, Filter, MapPin, Star, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import Input from '../ui/Input';
 
 const HostelsPage: React.FC = () => {
-  const { hostels, setCurrentPage } = useApp();
+  const { hostels, setCurrentPage, isAuthenticated, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
 
@@ -18,6 +17,21 @@ const HostelsPage: React.FC = () => {
     const matchesUniversity = !selectedUniversity || hostel.university === selectedUniversity;
     return matchesSearch && matchesUniversity;
   });
+
+  const handleWishlistToggle = (hostelId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      setCurrentPage('login');
+      return;
+    }
+
+    if (isInWishlist(hostelId)) {
+      removeFromWishlist(hostelId);
+    } else {
+      addToWishlist(hostelId);
+    }
+  };
 
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
@@ -62,14 +76,18 @@ const HostelsPage: React.FC = () => {
         {/* Hostels Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredHostels.map((hostel) => (
-            <Card key={hostel.id} hover className="overflow-hidden">
+            <Card key={hostel.id} hover className="overflow-hidden cursor-pointer" onClick={() => setCurrentPage('hostel-detail')}>
               <div 
-                className="h-48 bg-gray-200 bg-cover bg-center"
+                className="h-48 bg-gray-200 bg-cover bg-center relative"
                 style={{ backgroundImage: `url(${hostel.images[0]})` }}
               >
-                <div className="h-full bg-black bg-opacity-20 flex items-end justify-end p-4">
-                  <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors">
-                    <Heart className="h-5 w-5 text-gray-600 hover:text-red-500" />
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                <div className="absolute top-4 right-4">
+                  <button 
+                    onClick={(e) => handleWishlistToggle(hostel.id, e)}
+                    className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors"
+                  >
+                    <Heart className={`h-5 w-5 ${isInWishlist(hostel.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
                   </button>
                 </div>
               </div>
@@ -111,7 +129,10 @@ const HostelsPage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setCurrentPage('hostel-detail')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentPage('hostel-detail');
+                  }}
                 >
                   View Details
                 </Button>

@@ -47,6 +47,8 @@ export interface Booking {
   amount: number;
   status: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
   createdAt: Date;
+  paymentId?: string;
+  receiptUrl?: string;
 }
 
 export interface Notification {
@@ -57,6 +59,39 @@ export interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
   createdAt: Date;
+}
+
+export interface WishlistItem {
+  id: string;
+  userId: string;
+  hostelId: string;
+  createdAt: Date;
+}
+
+export interface Review {
+  id: string;
+  hostelId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: Date;
+  helpful: number;
+}
+
+export interface PaymentData {
+  amount: number;
+  phoneNumber: string;
+  accountReference: string;
+  transactionDesc: string;
+}
+
+export interface MPesaResponse {
+  merchantRequestID: string;
+  checkoutRequestID: string;
+  responseCode: string;
+  responseDescription: string;
+  customerMessage: string;
 }
 
 export interface DashboardStats {

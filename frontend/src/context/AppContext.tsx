@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Hostel, Booking, Notification } from '../types';
+import { User, Hostel, Booking, Notification, WishlistItem, Review } from '../types';
 
 interface AppContextType {
   user: User | null;
@@ -9,11 +9,19 @@ interface AppContextType {
   hostels: Hostel[];
   bookings: Booking[];
   notifications: Notification[];
+  wishlist: WishlistItem[];
+  reviews: Review[];
   isAuthenticated: boolean;
   login: (email: string, password: string, role: string) => void;
   logout: () => void;
   currentPage: string;
   setCurrentPage: (page: string) => void;
+  addToWishlist: (hostelId: string) => void;
+  removeFromWishlist: (hostelId: string) => void;
+  isInWishlist: (hostelId: string) => boolean;
+  addReview: (hostelId: string, rating: number, comment: string) => void;
+  getHostelReviews: (hostelId: string) => Review[];
+  createBooking: (bookingData: any) => Promise<Booking>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -245,6 +253,29 @@ const createMockNotifications = (role: string): Notification[] => {
   }
 };
 
+const mockReviews: Review[] = [
+  {
+    id: '1',
+    hostelId: '1',
+    userId: '1',
+    userName: 'John Mwangi',
+    rating: 5,
+    comment: 'Great hostel with clean facilities and friendly staff. The location is perfect for university students.',
+    createdAt: new Date('2023-07-01'),
+    helpful: 12
+  },
+  {
+    id: '2',
+    hostelId: '1',
+    userId: '2',
+    userName: 'Grace Akinyi',
+    rating: 4,
+    comment: 'The study area is well-equipped and quiet. Internet is reliable which is great for online classes.',
+    createdAt: new Date('2023-06-15'),
+    helpful: 8
+  }
+];
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [currentRole, setCurrentRole] = useState('student');
@@ -252,6 +283,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [hostels] = useState<Hostel[]>(mockHostels);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
 
   const isAuthenticated = user !== null;
 
@@ -268,6 +301,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUser(null);
     setBookings([]);
     setNotifications([]);
+    setWishlist([]);
     setCurrentPage('home');
   };
 
@@ -283,6 +317,67 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const addToWishlist = (hostelId: string) => {
+    if (!user) return;
+    
+    const newWishlistItem: WishlistItem = {
+      id: Date.now().toString(),
+      userId: user.id,
+      hostelId,
+      createdAt: new Date()
+    };
+    
+    setWishlist(prev => [...prev, newWishlistItem]);
+  };
+
+  const removeFromWishlist = (hostelId: string) => {
+    if (!user) return;
+    setWishlist(prev => prev.filter(item => !(item.hostelId === hostelId && item.userId === user.id)));
+  };
+
+  const isInWishlist = (hostelId: string) => {
+    if (!user) return false;
+    return wishlist.some(item => item.hostelId === hostelId && item.userId === user.id);
+  };
+
+  const addReview = (hostelId: string, rating: number, comment: string) => {
+    if (!user) return;
+    
+    const newReview: Review = {
+      id: Date.now().toString(),
+      hostelId,
+      userId: user.id,
+      userName: user.name,
+      rating,
+      comment,
+      createdAt: new Date(),
+      helpful: 0
+    };
+    
+    setReviews(prev => [...prev, newReview]);
+  };
+
+  const getHostelReviews = (hostelId: string) => {
+    return reviews.filter(review => review.hostelId === hostelId);
+  };
+
+  const createBooking = async (bookingData: any): Promise<Booking> => {
+    const newBooking: Booking = {
+      id: Date.now().toString(),
+      hostelId: bookingData.hostelId,
+      studentId: user?.id || '',
+      roomType: bookingData.roomType,
+      checkIn: new Date(bookingData.checkIn),
+      checkOut: new Date(bookingData.checkOut),
+      amount: bookingData.amount,
+      status: 'pending',
+      createdAt: new Date()
+    };
+    
+    setBookings(prev => [...prev, newBooking]);
+    return newBooking;
+  };
+
   return (
     <AppContext.Provider value={{
       user,
@@ -292,11 +387,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       hostels,
       bookings,
       notifications,
+      wishlist,
+      reviews,
       isAuthenticated,
       login,
       logout,
       currentPage,
-      setCurrentPage
+      setCurrentPage,
+      addToWishlist,
+      removeFromWishlist,
+      isInWishlist,
+      addReview,
+      getHostelReviews,
+      createBooking
     }}>
       {children}
     </AppContext.Provider>
