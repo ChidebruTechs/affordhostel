@@ -54,13 +54,25 @@ const Sidebar: React.FC = () => {
 
   const currentMenuItems = menuItems[currentRole as keyof typeof menuItems] || menuItems.student;
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   return (
     <div className="bg-gray-900 text-white w-64 h-screen overflow-y-auto">
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
-          </div>
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-12 h-12 rounded-full object-cover border-2 border-teal-500"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+              {getInitials(user?.name || 'User')}
+            </div>
+          )}
           <div>
             <h3 className="font-semibold">{user?.name || 'User'}</h3>
             <p className="text-sm text-gray-400 capitalize">{currentRole}</p>

@@ -21,7 +21,7 @@ import Card from './components/ui/Card';
 import Button from './components/ui/Button';
 
 const AppContent: React.FC = () => {
-  const { currentPage, isAuthenticated, currentRole, logout, setCurrentPage, hostels, wishlist } = useApp();
+  const { currentPage, isAuthenticated, currentRole, logout, setCurrentPage, hostels, wishlist, user } = useApp();
 
   const renderDashboard = () => {
     switch (currentRole) {
@@ -175,7 +175,11 @@ const AppContent: React.FC = () => {
                       <p className="text-gray-600 mb-4">{hostel.location}</p>
                       <div className="flex space-x-2">
                         <Button className="flex-1" onClick={() => setCurrentPage('hostel-detail')}>Book Now</Button>
-                        <Button variant="outline">Remove</Button>
+                        <Button variant="outline" onClick={() => {
+                          // Remove from wishlist functionality
+                          const { removeFromWishlist } = useApp();
+                          removeFromWishlist(hostel.id);
+                        }}>Remove</Button>
                       </div>
                     </div>
                   </Card>
@@ -208,7 +212,7 @@ const AppContent: React.FC = () => {
             </h1>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">
-                Welcome back, <span className="font-medium">{currentRole}</span>
+                Welcome back, <span className="font-medium">{user?.name || currentRole}</span>
               </div>
               <Button variant="outline" onClick={logout}>
                 Logout

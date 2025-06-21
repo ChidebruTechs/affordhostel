@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
 
 const Header: React.FC = () => {
-  const { isAuthenticated, setCurrentPage, notifications } = useApp();
+  const { isAuthenticated, setCurrentPage, notifications, user } = useApp();
   
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -70,7 +70,7 @@ const Header: React.FC = () => {
                   className="flex items-center space-x-2 p-2 text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   <User className="h-6 w-6" />
-                  <span className="hidden sm:block">Dashboard</span>
+                  <span className="hidden sm:block">{user?.name?.split(' ')[0] || 'Dashboard'}</span>
                 </button>
               </>
             ) : (

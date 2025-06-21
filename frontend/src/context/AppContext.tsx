@@ -22,6 +22,8 @@ interface AppContextType {
   addReview: (hostelId: string, rating: number, comment: string) => void;
   getHostelReviews: (hostelId: string) => Review[];
   createBooking: (bookingData: any) => Promise<Booking>;
+  updateUserProfile: (updates: Partial<User>) => void;
+  uploadProfilePicture: (file: File) => Promise<string>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -29,16 +31,17 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // Enhanced mock data with role-specific content
 const createMockUser = (role: string): User => ({
   id: '1',
-  name: role === 'student' ? 'John Doe' : 
+  name: role === 'student' ? 'John Mwangi' : 
         role === 'landlord' ? 'James Omondi' :
-        role === 'agent' ? 'Brian Kiprotich' : 'Admin User',
+        role === 'agent' ? 'Brian Kiprotich' : 'Sarah Wanjiku',
   email: `${role}@example.com`,
   phone: '+254712345678',
   role: role as any,
   university: role === 'student' ? 'University of Nairobi' : undefined,
-  studentId: role === 'student' ? 'UoN12345' : undefined,
+  studentId: role === 'student' ? 'UoN/2023/12345' : undefined,
   verified: true,
   createdAt: new Date('2023-06-15'),
+  avatar: undefined
 });
 
 const mockHostels: Hostel[] = [
@@ -378,6 +381,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return newBooking;
   };
 
+  const updateUserProfile = (updates: Partial<User>) => {
+    if (!user) return;
+    setUser({ ...user, ...updates });
+  };
+
+  const uploadProfilePicture = async (file: File): Promise<string> => {
+    // Simulate file upload
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockUrl = URL.createObjectURL(file);
+        if (user) {
+          setUser({ ...user, avatar: mockUrl });
+        }
+        resolve(mockUrl);
+      }, 2000);
+    });
+  };
+
   return (
     <AppContext.Provider value={{
       user,
@@ -399,7 +420,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isInWishlist,
       addReview,
       getHostelReviews,
-      createBooking
+      createBooking,
+      updateUserProfile,
+      uploadProfilePicture
     }}>
       {children}
     </AppContext.Provider>

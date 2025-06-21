@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Camera, Edit, MapPin, Calendar, Phone, Mail, CaseSensitive as University, Award, Star, CheckCircle } from 'lucide-react';
+import { Camera, Edit, MapPin, Calendar, Phone, Mail, CaseSensitive as University, Award, Star, CheckCircle, Upload, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
 const ProfilePage: React.FC = () => {
-  const { user, currentRole, bookings, hostels } = useApp();
+  const { user, currentRole, bookings, hostels, updateUserProfile, uploadProfilePicture } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -18,7 +19,13 @@ const ProfilePage: React.FC = () => {
   });
 
   const handleSave = () => {
-    // Save profile logic here
+    updateUserProfile({
+      name: profileData.name,
+      email: profileData.email,
+      phone: profileData.phone,
+      university: profileData.university,
+      studentId: profileData.studentId
+    });
     setIsEditing(false);
   };
 
@@ -27,6 +34,32 @@ const ProfilePage: React.FC = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      await uploadProfilePicture(file);
+    } catch (error) {
+      alert('Failed to upload photo. Please try again.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -105,12 +138,36 @@ const ProfilePage: React.FC = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
           {/* Profile Picture */}
           <div className="relative">
-            <div className="w-32 h-32 bg-gradient-to-br from-purple-500 to-teal-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-              {getInitials(profileData.name)}
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+            ) : (
+              <div className="w-32 h-32 bg-gradient-to-br from-purple-500 to-teal-500 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-lg">
+                {getInitials(profileData.name)}
+              </div>
+            )}
+            
+            <div className="absolute bottom-2 right-2">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  disabled={isUploadingPhoto}
+                />
+                <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors shadow-lg">
+                  {isUploadingPhoto ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <Camera className="h-5 w-5" />
+                  )}
+                </div>
+              </label>
             </div>
-            <button className="absolute bottom-2 right-2 w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors">
-              <Camera className="h-5 w-5" />
-            </button>
           </div>
 
           {/* Profile Info */}
@@ -165,6 +222,19 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Photo Upload Instructions */}
+        {isUploadingPhoto && (
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center space-x-3">
+              <Upload className="h-5 w-5 text-blue-600" />
+              <div>
+                <h4 className="font-medium text-blue-800">Uploading Photo...</h4>
+                <p className="text-sm text-blue-700">Please wait while we process your profile picture.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Stats Grid */}

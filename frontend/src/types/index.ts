@@ -97,3 +97,21 @@ export interface MPesaResponse {
 export interface DashboardStats {
   [key: string]: number | string;
 }
+
+export interface ReceiptData {
+  bookingId: string;
+  transactionId: string;
+  hostelName: string;
+  roomType: string;
+  checkIn: string;
+  checkOut: string;
+  duration: number;
+  amount: number;
+  serviceFee: number;
+  totalAmount: number;
+  paymentMethod: string;
+  phoneNumber: string;
+  timestamp: Date;
+  customerName: string;
+  customerEmail: string;
+}

@@ -4,6 +4,8 @@ import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Card from '../ui/Card';
+import { generatePDFReceipt } from '../../utils/pdfGenerator';
+import { ReceiptData } from '../../types';
 
 interface CheckoutPageProps {
   bookingData: {
@@ -25,7 +27,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ bookingData, onBack }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
   const [transactionId, setTransactionId] = useState('');
-  const [receiptData, setReceiptData] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
   const serviceFee = Math.round(bookingData.amount * 0.025); // 2.5% service fee
   const totalAmount = bookingData.amount + serviceFee;
@@ -49,7 +51,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ bookingData, onBack }) => {
       });
 
       // Generate receipt data
-      const receipt = {
+      const receipt: ReceiptData = {
         bookingId: booking.id,
         transactionId: mockTransactionId,
         hostelName: bookingData.hostelName,
@@ -76,7 +78,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ bookingData, onBack }) => {
     }
   };
 
-  const downloadReceipt = () => {
+  const downloadPDFReceipt = () => {
+    if (!receiptData) return;
+    generatePDFReceipt(receiptData);
+  };
+
+  const downloadTextReceipt = () => {
     if (!receiptData) return;
 
     const receiptContent = `
@@ -156,9 +163,13 @@ For support, contact: support@affordhostel.com
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button onClick={downloadReceipt} className="flex items-center">
+            <Button onClick={downloadPDFReceipt} className="flex items-center">
               <Download className="h-4 w-4 mr-2" />
-              Download Receipt
+              Download PDF Receipt
+            </Button>
+            <Button variant="outline" onClick={downloadTextReceipt} className="flex items-center">
+              <Download className="h-4 w-4 mr-2" />
+              Download Text Receipt
             </Button>
             <Button variant="outline" onClick={onBack}>
               Back to Hostels

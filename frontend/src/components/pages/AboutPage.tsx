@@ -1,9 +1,23 @@
 import React from 'react';
 import { Users, Target, Heart, Award, CheckCircle, Calendar, TrendingUp, Shield } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 const AboutPage: React.FC = () => {
+  const { setCurrentPage, setCurrentRole, isAuthenticated } = useApp();
+
+  const handleJoinAsLandlord = () => {
+    if (isAuthenticated) {
+      // If user is already authenticated, switch to landlord role
+      setCurrentRole('landlord');
+      setCurrentPage('dashboard');
+    } else {
+      // If not authenticated, go to signup page with landlord role pre-selected
+      setCurrentPage('signup');
+    }
+  };
+
   const stats = [
     { number: '1,200+', label: 'Students Served', icon: Users },
     { number: '300+', label: 'Verified Hostels', icon: Shield },
@@ -320,10 +334,20 @@ const AboutPage: React.FC = () => {
             Join thousands of students who have found their ideal accommodation through AffordHostel
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              className="text-lg px-8 py-4"
+              onClick={() => setCurrentPage('hostels')}
+            >
               Browse Hostels
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-purple-600">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-purple-600"
+              onClick={handleJoinAsLandlord}
+            >
               Join as Landlord
             </Button>
           </div>
