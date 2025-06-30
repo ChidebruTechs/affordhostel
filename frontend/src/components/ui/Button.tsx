@@ -3,15 +3,17 @@ import React from 'react';
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
-  children: React.ReactNode;
   fullWidth?: boolean;
+  children: React.ReactNode;
+  
 }
 
 const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
-  children,
   fullWidth = false,
+  children,
+
   className = '',
   ...props
 }) => {

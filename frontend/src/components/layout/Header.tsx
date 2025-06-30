@@ -77,7 +77,6 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-700">
               {menuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
@@ -86,7 +85,6 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-md px-4 pb-4 space-y-3">
           <button onClick={() => { setCurrentPage('home'); setMenuOpen(false); }} className="block w-full text-left text-gray-700 hover:text-purple-600">
@@ -102,7 +100,6 @@ const Header: React.FC = () => {
             Contact
           </button>
 
-          {/* Mobile Auth Actions */}
           {isAuthenticated ? (
             <div className="space-y-2">
               <button
