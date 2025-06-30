@@ -1,4 +1,3 @@
-Here’s the **cleaned-up and merged version** of your conflicting `README.md` or documentation content. I’ve merged all relevant sections from both sides, removed the Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`), and harmonized similar content.
 
 ---
 
@@ -69,7 +68,7 @@ Here’s the **cleaned-up and merged version** of your conflicting `README.md` o
 
 ### Backend Setup (Django)
 
-```bash
+
 # Clone the repo
 git clone https://github.com/yourusername/affordhostel.git
 cd affordhostel/backend
@@ -92,13 +91,10 @@ python manage.py migrate
 
 # Start the server
 python manage.py runserver
-````
 
----
 
 ### Frontend Setup (React)
 
-```bash
 cd ../frontend
 
 # Install dependencies
@@ -110,9 +106,7 @@ npm install
 
 # Start React dev server
 npm start
-```
 
----
 
 ## 📂 Project Structure
 
@@ -163,7 +157,6 @@ Containerized using Docker, ready for deployment on:
 
 ## 🤝 Contributing
 
-```bash
 # Fork the repository
 # Create your feature branch
 git checkout -b feature/your-feature
