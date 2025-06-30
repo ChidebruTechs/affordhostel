@@ -1,128 +1,204 @@
-🏠 AffordHostel
-AffordHostel is a web application designed to simplify off-campus hostel booking in Kenya. It connects students, landlords, and agents on a unified platform, offering a seamless experience for browsing, booking, and managing hostel accommodations.
+Here’s the **cleaned-up and merged version** of your conflicting `README.md` or documentation content. I’ve merged all relevant sections from both sides, removed the Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`), and harmonized similar content.
 
-🚀 Features
-🔐 Admin Panel: Manage users, listings, and platform settings.
+---
 
-🏘️ Landlord Dashboard: Create, update, and manage hostel listings.
+### ✅ Merged Version (Conflict Resolved)
 
-🎓 Student Account: Browse hostels, view details, make bookings.
+````md
+# 🏠 AffordHostel - Off-Campus Hostel Booking Platform
 
-🧑‍💼 Agent Authorization: Agents can verify and manage listings.
+**AffordHostel** is a web application designed to simplify off-campus hostel booking in Kenya. It connects students, landlords, and agents on a unified platform, offering a seamless experience for browsing, booking, and managing hostel accommodations.
 
-🔎 Hostel Discovery: Search and filter hostels by location, price, amenities, and more.
+![AffordHostel Preview](https://via.placeholder.com/800x400?text=AffordHostel+Screenshot)  
+*Replace with actual screenshots*
 
-💬 Booking & Notifications: Book hostels and receive confirmations.
+---
 
-🛠️ Tech Stack
-Frontend: React
+## 🚀 Features
 
-Backend: Django
+### 🎓 Student Accounts
+- Register/login with student verification
+- Browse hostels/rooms with filters (price, location, amenities)
+- Book accommodations and pay via integrated gateways (M-Pesa, Stripe)
+- Review and rate hostels
+- Track booking history
 
-Database: PostgreSQL
+### 🏠 Landlord Dashboard
+- Create, update, and manage hostel listings
+- Upload photos, descriptions, and pricing
+- View booking requests and confirmations
+- Access occupancy analytics
 
-🧑‍💻 Getting Started
-Prerequisites
-Node.js & npm
+### 🔑 Admin Panel
+- Manage users (students, landlords, agents)
+- Moderate content (listings, reviews)
+- Generate financial/usage reports
+- Configure system settings
 
-Python 3.9+
+### 🤝 Agent Authorization
+- Assist students and landlords with bookings (commission-based)
+- Tiered access levels (Bronze, Silver, Gold)
+- Track commissions and transactions
 
-PostgreSQL
+### 🔎 Hostel Discovery
+- Search and filter hostels by location, price, and amenities
 
-pip / pipenv / virtualenv
+### 💬 Booking & Notifications
+- Book hostels and receive confirmations in real-time
 
-Backend Setup (Django)
-bash
-Copy
-Edit
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React
+- **Backend**: Django
+- **Database**: PostgreSQL
+
+---
+
+## 🧑‍💻 Getting Started
+
+### Prerequisites
+
+- Node.js & npm
+- Python 3.8+
+- PostgreSQL
+- pip / pipenv / virtualenv
+
+---
+
+### Backend Setup (Django)
+
+```bash
 # Clone the repo
-git clone https://github.com/your-username/affordhostel.git
+git clone https://github.com/yourusername/affordhostel.git
 cd affordhostel/backend
 
 # Set up virtual environment
-python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure PostgreSQL database in settings.py
-# Then apply migrations
+# Create .env file and configure:
+# SECRET_KEY=your_secret
+# DATABASE_URL=postgres://user:pass@localhost:5432/affordhostel
+# JWT_SECRET=jwt_key
+# DEBUG=True
+
+# Apply migrations
 python manage.py migrate
 
-# Start the development server
+# Start the server
 python manage.py runserver
-Frontend Setup (React)
-bash
-Copy
-Edit
+````
+
+---
+
+### Frontend Setup (React)
+
+```bash
 cd ../frontend
 
 # Install dependencies
 npm install
 
+# Create .env file with:
+# REACT_APP_API_URL=http://localhost:8000
+# REACT_APP_MAPBOX_TOKEN=your_token
+
 # Start React dev server
 npm start
-📂 Project Structure
-csharp
-Copy
-Edit
+```
+
+---
+
+## 📂 Project Structure
+
+```
 affordhostel/
-│
 ├── backend/               # Django backend
 │   ├── manage.py
 │   └── affordhostel/      # Django project files
-│
 ├── frontend/              # React frontend
 │   ├── src/
 │   └── public/
-│
 └── README.md
-🛡️ Security & Authorization
-Authentication handled via Django (with potential for JWT or OAuth).
+```
 
-Role-based access:
+---
 
-Admin: Full access
+## 🛡️ Security & Authorization
 
-Landlord: Listing management
+* Authentication via Django (JWT or OAuth ready)
+* Role-based access:
 
-Student: Browsing & booking
+  * Admin: Full access
+  * Landlord: Listing management
+  * Student: Browsing & booking
+  * Agent: Listing verification
 
-Agent: Listing verification
+---
 
-🌍 Deployment
-To be containerized using Docker and deployed via platforms like Heroku, Render, or DigitalOcean.
+## 🌍 Deployment
 
-📌 Roadmap
- Agent verification flow
+Containerized using Docker, ready for deployment on:
 
- Payment integration
+* Heroku
+* Render
+* DigitalOcean
 
- Email & SMS notifications
+---
 
- Mobile responsive UI
+## 📌 Roadmap
 
- Review & rating system
+* Agent verification flow
+* Payment integration (M-Pesa/Stripe)
+* Email & SMS notifications
+* Mobile responsive UI
+* Review & rating system
 
-🤝 Contributing
-Contributions are welcome! Please open issues and submit pull requests for improvements or feature additions.
+---
 
-bash
-Copy
-Edit
+## 🤝 Contributing
+
+```bash
 # Fork the repository
 # Create your feature branch
-git checkout -b feature/YourFeature
+git checkout -b feature/your-feature
 
 # Commit your changes
 git commit -m "Add your feature"
 
 # Push and create a PR
-git push origin feature/YourFeature
-📄 License
-This project is licensed under the MIT License.
+git push origin feature/your-feature
+```
 
-📫 Contact
-For questions or collaborations, contact us at: affordhostel@gmail.com
+Please follow PEP8 (Python) and Airbnb Style Guide (React).
+
+---
+
+## 📄 License
+
+Licensed under the MIT License.
+
+---
+
+## 📫 Contact
+
+For questions or collaborations:
+
+* Email: [affordhostel@gmail.com](mailto:affordhostel@gmail.com)
+* GitHub: [ChidebruTechs](https://github.com/ChidebruTechs)
+* Project Lead: Deusdarius Chimoyi
+
+
+
+Now you can save this to your file and run:
+
+
+git add README.md
+git commit -m "Resolved merge conflict in README.md"
+git push
 
