@@ -1,0 +1,33 @@
+{
+  "name": "AffordHostel Frontend",
+  "description": "React frontend for AffordHostel platform",
+  "repository": "https://github.com/your-username/affordhostel-frontend",
+  "keywords": ["react", "vite", "typescript", "frontend", "hostel"],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-static"
+    }
+  ],
+  "env": {
+    "VITE_API_BASE_URL": {
+      "description": "Backend API URL",
+      "value": "https://your-backend-app.herokuapp.com/api"
+    },
+    "VITE_APP_NAME": {
+      "description": "Application name",
+      "value": "AffordHostel"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "scripts": {
+    "postdeploy": "npm run build"
+  }
+}

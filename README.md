@@ -1,145 +1,211 @@
-# AffordHostel - Off-Campus Hostel Booking Platform
+# AffordHostel Platform
 
-**AffordHostel** is a web application designed to streamline off-campus hostel and room bookings for students in Kenya. Built with React (frontend) and Django (backend), it empowers landlords to list properties, students to browse/book accommodations, and agents to facilitate transactions.
+A comprehensive student accommodation booking platform for Kenya, built with React frontend and Django backend.
 
-![AffordHostel Preview](https://via.placeholder.com/800x400?text=AffordHostel+Screenshot) *Replace with actual screenshots*
+## 🏗️ Architecture
 
-## Features
+This project is split into two separate applications:
 
-### 👨🎓 Student Accounts
-- Register/login with student verification
-- Browse hostels/rooms with filters (price, location, amenities)
-- Book accommodations and pay via integrated gateways (M-Pesa, Stripe)
-- Review and rate hostels
-- Track booking history
+- **Frontend**: React + TypeScript + Vite application
+- **Backend**: Django REST API with PostgreSQL database
 
-### 🏠 Landlord Dashboard
-- Create and manage hostel listings
-- Upload photos/descriptions/pricing
-- View booking requests and confirmations
-- Access occupancy analytics
+## 🚀 Deployment
 
-### 🔑 Admin Panel
-- Manage users (students, landlords, agents)
-- Moderate content (listings, reviews)
-- Generate financial/usage reports
-- Configure system settings
+### Frontend Deployment (Heroku)
 
-### 🤝 Agent Authorization
-- Assist students/landlords with bookings (commission-based)
-- Tiered access levels (Bronze, Silver, Gold)
-- Track commissions and transactions
-
-## Installation
-
-### Prerequisites
-- Python 3.8+ (Backend)
-- Node.js 16+ & npm (Frontend)
-- PostgreSQL (Recommended database)
-
-### Backend (Django)
-1. Clone repo:
+1. **Create Heroku app for frontend:**
    ```bash
-   git clone https://github.com/yourusername/AffordHostel.git
-   cd AffordHostel/backend
-Create virtual environment:
+   cd frontend
+   heroku create your-frontend-app-name
+   ```
 
-bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate    # Windows
-Install dependencies:
+2. **Set environment variables:**
+   ```bash
+   heroku config:set VITE_API_BASE_URL=https://your-backend-app.herokuapp.com/api
+   ```
 
-bash
-pip install -r requirements.txt
-Configure environment variables (create .env):
+3. **Deploy:**
+   ```bash
+   git add .
+   git commit -m "Deploy frontend"
+   git push heroku main
+   ```
 
-ini
-SECRET_KEY=your_django_secret
-DATABASE_URL=postgres://user:pass@localhost:5432/affordhostel
-DEBUG=True
-JWT_SECRET=your_jwt_secret
-Run migrations:
+### Backend Deployment (Heroku)
 
-bash
-python manage.py migrate
-Start server:
+1. **Create Heroku app for backend:**
+   ```bash
+   cd backend
+   heroku create your-backend-app-name
+   ```
 
-bash
-python manage.py runserver
-Frontend (React)
-Navigate to frontend:
+2. **Add PostgreSQL and Redis addons:**
+   ```bash
+   heroku addons:create heroku-postgresql:mini
+   heroku addons:create heroku-redis:mini
+   ```
 
-bash
-cd ../frontend
-Install dependencies:
+3. **Set environment variables:**
+   ```bash
+   heroku config:set SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+   heroku config:set DEBUG=False
+   heroku config:set FRONTEND_URL=https://your-frontend-app.herokuapp.com
+   ```
 
-bash
-npm install
-Configure environment (create .env):
+4. **Deploy:**
+   ```bash
+   git add .
+   git commit -m "Deploy backend"
+   git push heroku main
+   ```
 
-ini
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_MAPBOX_TOKEN=your_token
-Start development server:
+## 🛠️ Local Development
 
-bash
-npm start
-Configuration
-Update these in your .env files:
+### Backend Setup
 
-Backend
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
 
-PAYMENT_MODE (sandbox/production)
+2. **Create virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-MPESA_CONSUMER_KEY & MPESA_CONSUMER_SECRET
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-STRIPE_API_KEY
+4. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-Frontend
+5. **Run migrations:**
+   ```bash
+   python manage.py migrate
+   ```
 
-REACT_APP_GOOGLE_ANALYTICS_ID
+6. **Create superuser:**
+   ```bash
+   python manage.py createsuperuser
+   ```
 
-REACT_APP_STRIPE_PUBLIC_KEY
+7. **Start development server:**
+   ```bash
+   python manage.py runserver
+   ```
 
-Usage
-Access admin panel: http://localhost:8000/admin (Create superuser with python manage.py createsuperuser)
+### Frontend Setup
 
-Student/Landlord signup: Available via frontend registration
+1. **Navigate to frontend directory:**
+   ```bash
+   cd frontend
+   ```
 
-Test payments: Use Stripe test card 4242 4242 4242 4242
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-API Endpoints
-Endpoint	Method	Description
-/api/auth/login	POST	User authentication
-/api/hostels/	GET	List all hostels
-/api/bookings/	POST	Create new booking
-/api/payments/mpesa/	POST	Initiate M-Pesa payment
-Full API documentation available at /swagger/ after running server.
+3. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-Contributing
-Fork the repository
+4. **Start development server:**
+   ```bash
+   npm run dev
+   ```
 
-Create a feature branch (git checkout -b feature/your-feature)
+## 📱 Features
 
-Commit changes (git commit -m 'Add some feature')
+- **Multi-role Authentication**: Student, Landlord, Agent, Admin
+- **Hostel Management**: CRUD operations with images and amenities
+- **Booking System**: Complete booking workflow with payments
+- **Payment Integration**: M-Pesa and PayPal support
+- **Review System**: User reviews and ratings
+- **Notification System**: Real-time notifications
+- **Admin Dashboard**: Content management for company info and team
+- **Analytics**: Comprehensive platform analytics
+- **Responsive Design**: Mobile-first approach
 
-Push to branch (git push origin feature/your-feature)
+## 🔐 Special Access
 
-Open a Pull Request
+### Admin & Agent Access
+For security purposes, Admin and Agent roles are not visible in the public sign-in/signup forms. To access these roles:
 
-Please adhere to PEP8 (Python) and Airbnb React Style Guide.
+1. **For Login**: Visit `/login?access=privileged` or add `?access=privileged` to the login URL
+2. **For Signup**: Visit `/signup?access=privileged` or add `?access=privileged` to the signup URL
 
-License
-Distributed under the MIT License. See LICENSE for details.
+This ensures that only authorized personnel with the special URL can access administrative and agent functionalities.
 
-Acknowledgements
-Django REST Framework
+### Demo Credentials
+You can use any email/password combination with the following roles:
+- **Student**: Regular user access for browsing and booking hostels
+- **Landlord**: Property management and booking oversight
+- **Agent**: Property verification and landlord management (requires privileged access)
+- **Admin**: Full platform administration (requires privileged access)
 
-React Community
+## 🔧 Technology Stack
 
-M-Pesa API Documentation
+### Frontend
+- React 18 + TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- Lucide React for icons
+- Axios for API calls
 
-Contact
-Project Lead: Deusdarius Chimoyi
-GitHub: ChidebruTechs
+### Backend
+- Django 4.2 + Django REST Framework
+- PostgreSQL database
+- JWT authentication
+- Celery for background tasks
+- Redis for caching
+- M-Pesa API integration
+
+## 🌐 API Documentation
+
+The backend provides a comprehensive REST API with the following endpoints:
+
+- **Authentication**: `/api/auth/`
+- **Hostels**: `/api/hostels/`
+- **Bookings**: `/api/bookings/`
+- **Reviews**: `/api/reviews/`
+- **Notifications**: `/api/notifications/`
+- **Payments**: `/api/payments/`
+- **Core**: `/api/core/`
+
+## 🔐 Security Features
+
+- JWT token authentication
+- Role-based permissions
+- CORS configuration
+- Input validation and sanitization
+- Secure file uploads
+- Password hashing
+- Two-factor authentication support
+
+## 📊 Monitoring
+
+- Comprehensive logging
+- Error tracking
+- Performance monitoring
+- Database query optimization
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
