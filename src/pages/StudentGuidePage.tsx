@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, BookOpen, Home, Users, Shield, DollarSign, Calendar, AlertTriangle, CheckCircle, Phone, Mail } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const StudentGuidePage: React.FC = () => {
   const { setCurrentPage } = useApp();

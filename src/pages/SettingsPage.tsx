@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Camera, Shield, Download, Trash2, Eye, EyeOff, AlertTriangle, CheckCircle, Smartphone, Key, LogOut, X } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
+import { useApp } from '../context/AppContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
 
 interface ActiveSession {
   id: string;

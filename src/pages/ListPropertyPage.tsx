@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Plus, CheckCircle, Upload, Camera, MapPin, DollarSign, Users, Shield, Clock, Star, AlertTriangle } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const ListPropertyPage: React.FC = () => {
   const { setCurrentPage, isAuthenticated, currentRole } = useApp();

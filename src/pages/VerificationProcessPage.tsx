@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Shield, FileText, Eye, CheckCircle, Clock, AlertTriangle, Camera, MapPin, Users, Award, Star } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const VerificationProcessPage: React.FC = () => {
   const { setCurrentPage, isAuthenticated, currentRole } = useApp();

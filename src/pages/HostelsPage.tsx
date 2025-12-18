@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Star, Heart, ChevronDown, X } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import { universities, towns, getTownByUniversity, getUniversitiesByTown } from '../../data/universitiesAndTowns';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import { universities, towns, getTownByUniversity, getUniversitiesByTown } from '../data/universitiesAndTowns';
+import { supabase } from '../../lib/supabase';
+
+interface Hostel {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  location: string;
+  university: string;
+  amenities: string[];
+  images: string[];
+  landlord_id: string;
+  verified: boolean;
+  verification_status: string;
+  assigned_agent_id: string | null;
+  created_at: string;
+  updated_at: string;
+  rating: number;
+  roomTypes: any[];
+}
 
 const HostelsPage: React.FC = () => {
-  const { hostels, setCurrentPage, isAuthenticated, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
+  const { setCurrentPage, isAuthenticated, addToWishlist, removeFromWishlist, isInWishlist } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedTown, setSelectedTown] = useState('');
@@ -14,9 +34,72 @@ const HostelsPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [sortBy, setSortBy] = useState('newest');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch hostels from Supabase
+  useEffect(() => {
+    const fetchHostels = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch hostels data with proper filtering for only verified/available ones
+        const { data: hostelsData, error: hostelsError } = await supabase
+          .from('hostels')
+          .select(`
+            *,
+            room_types(*)
+          `)
+          .eq('verified', true) // Only show verified hostels
+          .order('created_at', { ascending: false });
+
+        if (hostelsError) throw hostelsError;
+
+        if (hostelsData) {
+          // Transform the data to match the expected format
+          const transformedHostels = hostelsData.map(hostel => {
+            // Calculate average rating (in a real app, this would come from reviews table)
+            const rating = Math.random() * 2 + 3; // Random rating between 3-5 for demo
+            
+            return {
+              ...hostel,
+              rating: parseFloat(rating.toFixed(1)),
+              roomTypes: hostel.room_types || []
+            };
+          });
+
+          setHostels(transformedHostels);
+        }
+      } catch (err: any) {
+        console.error('Error fetching hostels:', err);
+        setError('Failed to load hostels. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHostels();
+
+    // Optional: Set up real-time subscription for hostel updates
+    const channel = supabase
+      .channel('hostels-channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'hostels'
+      }, () => {
+        fetchHostels(); // Refetch when changes occur
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Get all unique amenities from hostels for filtering
-  const allAmenities = [...new Set(hostels.flatMap(hostel => hostel.amenities))].sort();
+  const allAmenities = [...new Set(hostels.flatMap(hostel => hostel.amenities || []))].sort();
 
   const filteredHostels = hostels.filter(hostel => {
     const matchesSearch = hostel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,7 +122,7 @@ const HostelsPage: React.FC = () => {
                              (!priceRange.max || hostel.price <= parseInt(priceRange.max));
     
     const matchesAmenities = selectedAmenities.length === 0 || 
-                            selectedAmenities.every(amenity => hostel.amenities.includes(amenity));
+                            selectedAmenities.every(amenity => (hostel.amenities || []).includes(amenity));
     
     return matchesSearch && matchesUniversity && matchesTown && matchesPriceRange && matchesAmenities;
   });
@@ -57,11 +140,11 @@ const HostelsPage: React.FC = () => {
         return a.name.localeCompare(b.name);
       case 'newest':
       default:
-        return new Date(b.id).getTime() - new Date(a.id).getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
   });
 
-  const handleWishlistToggle = (hostelId: string, e: React.MouseEvent) => {
+  const handleWishlistToggle = async (hostelId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (!isAuthenticated) {
@@ -69,10 +152,41 @@ const HostelsPage: React.FC = () => {
       return;
     }
 
-    if (isInWishlist(hostelId)) {
-      removeFromWishlist(hostelId);
-    } else {
-      addToWishlist(hostelId);
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setCurrentPage('login');
+        return;
+      }
+
+      if (isInWishlist(hostelId)) {
+        // Remove from wishlist in Supabase
+        const { error } = await supabase
+          .from('wishlists')
+          .delete()
+          .match({ user_id: user.id, hostel_id: hostelId });
+
+        if (!error) {
+          removeFromWishlist(hostelId);
+        }
+      } else {
+        // Add to wishlist in Supabase
+        const { error } = await supabase
+          .from('wishlists')
+          .insert({
+            user_id: user.id,
+            hostel_id: hostelId
+          });
+
+        if (!error) {
+          addToWishlist(hostelId);
+        }
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+      alert('Failed to update wishlist. Please try again.');
     }
   };
 
@@ -125,6 +239,40 @@ const HostelsPage: React.FC = () => {
 
   // Get universities for the selected town (for better UX)
   const universitiesInSelectedTown = selectedTown ? getUniversitiesByTown(selectedTown) : universities;
+
+  if (loading) {
+    return (
+      <div className="pt-16 md:pt-20 min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading hostels...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-16 md:pt-20 min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Card className="p-8 text-center">
+            <div className="text-red-400 mb-4">
+              <X className="h-16 w-16 mx-auto" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Hostels</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-16 md:pt-20 min-h-screen bg-gray-50">
@@ -342,12 +490,27 @@ const HostelsPage: React.FC = () => {
         {sortedHostels.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
             {sortedHostels.map((hostel) => (
-              <Card key={hostel.id} hover className="overflow-hidden cursor-pointer" onClick={() => setCurrentPage('hostel-detail')}>
+              <Card 
+                key={hostel.id} 
+                hover 
+                className="overflow-hidden cursor-pointer" 
+                onClick={() => setCurrentPage('hostel-detail')}
+              >
                 <div 
                   className="h-40 sm:h-48 bg-gray-200 bg-cover bg-center relative"
-                  style={{ backgroundImage: `url(${hostel.images[0]})` }}
+                  style={{ 
+                    backgroundImage: `url(${hostel.images?.[0] || 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'})`,
+                    backgroundColor: hostel.images?.[0] ? 'transparent' : '#e5e7eb'
+                  }}
                 >
                   <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                  {hostel.verified && (
+                    <div className="absolute top-2 left-2">
+                      <span className="px-2 py-1 bg-teal-600 text-white text-xs rounded-full flex items-center">
+                        ✓ Verified
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute top-2 md:top-4 right-2 md:right-4">
                     <button 
                       onClick={(e) => handleWishlistToggle(hostel.id, e)}
@@ -386,7 +549,7 @@ const HostelsPage: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-1 md:gap-2 mb-2 md:mb-3">
-                    {hostel.amenities.slice(0, 3).map((amenity, index) => (
+                    {(hostel.amenities || []).slice(0, 3).map((amenity, index) => (
                       <span 
                         key={index}
                         className="px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-full"
@@ -394,9 +557,9 @@ const HostelsPage: React.FC = () => {
                         {amenity}
                       </span>
                     ))}
-                    {hostel.amenities.length > 3 && (
+                    {(hostel.amenities || []).length > 3 && (
                       <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        +{hostel.amenities.length - 3} more
+                        +{(hostel.amenities || []).length - 3} more
                       </span>
                     )}
                   </div>
@@ -407,6 +570,7 @@ const HostelsPage: React.FC = () => {
                     className="w-full text-sm"
                     onClick={(e) => {
                       e.stopPropagation();
+                      // In a real app, you would pass hostel details to the detail page
                       setCurrentPage('hostel-detail');
                     }}
                   >

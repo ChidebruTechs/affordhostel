@@ -1,8 +1,8 @@
 import React from 'react';
 import { Users, Building, UserCheck, Star } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const HomePage: React.FC = () => {
   const { setCurrentPage } = useApp();

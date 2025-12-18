@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Camera, Edit, MapPin, Calendar, Phone, Mail, CaseSensitive as University, Award, Star, CheckCircle, Upload, X } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import { useApp } from '../context/AppContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 
 const ProfilePage: React.FC = () => {
   const { user, currentRole, bookings, hostels, updateUserProfile, uploadProfilePicture } = useApp();

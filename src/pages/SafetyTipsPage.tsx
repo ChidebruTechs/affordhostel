@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Shield, Lock, Eye, Phone, AlertTriangle, CheckCircle, Users, Home, Clock, MapPin, Camera } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const SafetyTipsPage: React.FC = () => {
   const { setCurrentPage } = useApp();

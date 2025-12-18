@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Mail, CheckCircle, AlertCircle } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Card from '../components/ui/Card';
 
 const ForgotPasswordPage: React.FC = () => {
   const { setCurrentPage } = useApp();

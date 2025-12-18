@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Search, Calendar, CreditCard, CheckCircle, MapPin, Star, Users, Shield, Clock } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const HowToBookPage: React.FC = () => {
   const { setCurrentPage } = useApp();

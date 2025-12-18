@@ -17,9 +17,9 @@ import {
   Star,
   Clock
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import { useApp } from '../context/AppContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 
 interface AnalyticsData {
   overview: {

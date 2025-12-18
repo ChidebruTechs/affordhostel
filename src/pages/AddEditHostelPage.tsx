@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, X, Upload, MapPin, DollarSign, Building, Users, Save, Camera } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Card from '../ui/Card';
-import { universities } from '../../data/universitiesAndTowns';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Card from '../components/ui/Card';
+import { universities } from '../data/universitiesAndTowns';
+import { supabase } from '../../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface RoomType {
   id: string;
@@ -21,7 +23,7 @@ interface AddEditHostelPageProps {
 }
 
 const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack }) => {
-  const { hostels, user } = useApp();
+  const { hostels, user, addHostel, updateHostel, deleteHostel } = useApp();
   const isEditing = !!hostelId;
   const existingHostel = isEditing ? hostels.find(h => h.id === hostelId) : null;
 
@@ -41,25 +43,62 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
   const [activeRoomIndex, setActiveRoomIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   // Pre-populate form if editing
   useEffect(() => {
-    if (isEditing && existingHostel) {
-      setFormData({
-        name: existingHostel.name,
-        description: existingHostel.description,
-        price: existingHostel.price.toString(),
-        location: existingHostel.location,
-        university: existingHostel.university,
-        amenities: [...existingHostel.amenities],
-        images: [...existingHostel.images]
-      });
-      setRoomTypes(existingHostel.roomTypes.map(rt => ({
-        ...rt,
-        features: [...rt.features]
-      })));
-    }
-  }, [isEditing, existingHostel]);
+    const loadHostelData = async () => {
+      if (isEditing && hostelId) {
+        setIsLoading(true);
+        try {
+          // Fetch hostel data
+          const { data: hostelData, error: hostelError } = await supabase
+            .from('hostels')
+            .select('*')
+            .eq('id', hostelId)
+            .single();
+
+          if (hostelError) throw hostelError;
+
+          if (hostelData) {
+            setFormData({
+              name: hostelData.name,
+              description: hostelData.description,
+              price: hostelData.price.toString(),
+              location: hostelData.location,
+              university: hostelData.university,
+              amenities: hostelData.amenities || [],
+              images: hostelData.images || []
+            });
+
+            // Fetch room types for this hostel
+            const { data: roomTypesData, error: roomTypesError } = await supabase
+              .from('room_types')
+              .select('*')
+              .eq('hostel_id', hostelId);
+
+            if (roomTypesError) throw roomTypesError;
+
+            setRoomTypes(roomTypesData.map(rt => ({
+              id: rt.id,
+              type: rt.type,
+              price: rt.price,
+              total: rt.total,
+              features: rt.features || [],
+              description: rt.description || ''
+            })));
+          }
+        } catch (error) {
+          console.error('Error loading hostel data:', error);
+          alert('Failed to load hostel data');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadHostelData();
+  }, [isEditing, hostelId]);
 
   const commonAmenities = [
     'WiFi', 'Parking', 'Laundry', '24/7 Security', 'Study Area', 'Gym', 
@@ -136,31 +175,51 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
     setActiveRoomIndex(null);
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) {
-        alert('Please select only image files');
-        return;
-      }
+    setIsSubmitting(true);
+    
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) {
+          alert('Please select only image files');
+          continue;
+        }
 
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        return;
-      }
+        if (file.size > 5 * 1024 * 1024) {
+          alert('File size must be less than 5MB');
+          continue;
+        }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
+        // Upload to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `hostel-images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('hostels')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('hostels')
+          .getPublicUrl(filePath);
+
         setFormData(prev => ({
           ...prev,
-          images: [...prev.images, imageUrl]
+          images: [...prev.images, publicUrl]
         }));
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      alert(`Failed to upload image: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -201,46 +260,180 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
       return;
     }
 
+    if (!user?.id) {
+      alert('You must be logged in to save a hostel');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const hostelData = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: parseFloat(formData.price),
+        location: formData.location.trim(),
+        university: formData.university,
+        amenities: formData.amenities,
+        images: formData.images,
+        landlord_id: user.id,
+        verified: false,
+        verification_status: 'pending_submission',
+        assigned_agent_id: null,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (isEditing) {
-        // Update existing hostel
-        console.log('Updating hostel data:', {
-          ...formData,
-          price: parseFloat(formData.price),
-          roomTypes,
-          landlordId: user?.id
-        });
+      if (isEditing && hostelId) {
+        // UPDATE operation
+        const { data: updatedHostel, error: hostelError } = await supabase
+          .from('hostels')
+          .update(hostelData)
+          .eq('id', hostelId)
+          .select()
+          .single();
+
+        if (hostelError) throw hostelError;
+
+        // Delete existing room types and re-insert
+        const { error: deleteError } = await supabase
+          .from('room_types')
+          .delete()
+          .eq('hostel_id', hostelId);
+
+        if (deleteError) throw deleteError;
+
+        // Insert updated room types
+        const roomTypePromises = roomTypes.map(room => 
+          supabase
+            .from('room_types')
+            .insert({
+              hostel_id: hostelId,
+              type: room.type,
+              price: room.price,
+              total: room.total,
+              features: room.features,
+              description: room.description,
+            })
+        );
+
+        await Promise.all(roomTypePromises);
+
+        // Update local context
+        if (updateHostel) {
+          updateHostel(hostelId, {
+            ...hostelData,
+            id: hostelId,
+            roomTypes: roomTypes.map(rt => ({
+              ...rt,
+              hostelId: hostelId
+            })),
+            landlordId: user.id,
+            verificationStatus: 'pending_submission',
+            assignedAgentId: undefined
+          });
+        }
+
+        alert('Hostel updated successfully!');
       } else {
-        // Create new hostel with proper verification status
-        const newHostelData = {
-          ...formData,
-          price: parseFloat(formData.price),
-          roomTypes,
-          landlordId: user?.id,
-          verified: false,
-          verificationStatus: 'pending_submission' as const,
-          assignedAgentId: undefined
-        };
+        // CREATE operation
+        const newHostelId = uuidv4();
         
-        console.log('Creating new hostel data:', newHostelData);
-        
-        // In a real app, this would call addHostel from context
-        // addHostel(newHostelData);
+        const { data: newHostel, error: hostelError } = await supabase
+          .from('hostels')
+          .insert({
+            id: newHostelId,
+            ...hostelData,
+            created_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (hostelError) throw hostelError;
+
+        // Insert room types
+        const roomTypePromises = roomTypes.map(room => 
+          supabase
+            .from('room_types')
+            .insert({
+              hostel_id: newHostelId,
+              type: room.type,
+              price: room.price,
+              total: room.total,
+              features: room.features,
+              description: room.description,
+            })
+        );
+
+        await Promise.all(roomTypePromises);
+
+        // Add to local context
+        if (addHostel) {
+          addHostel({
+            ...hostelData,
+            id: newHostelId,
+            roomTypes: roomTypes.map(rt => ({
+              ...rt,
+              hostelId: newHostelId
+            })),
+            landlordId: user.id,
+            verificationStatus: 'pending_submission',
+            assignedAgentId: undefined
+          });
+        }
+
+        alert('Hostel created successfully!');
       }
 
-      alert(isEditing ? 'Hostel updated successfully!' : 'Hostel created successfully!');
       onBack();
-    } catch (error) {
-      alert('Failed to save hostel. Please try again.');
+    } catch (error: any) {
+      console.error('Error saving hostel:', error);
+      alert(`Failed to save hostel: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleDeleteHostel = async () => {
+    if (!hostelId || !window.confirm('Are you sure you want to delete this hostel? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // DELETE operation
+      const { error } = await supabase
+        .from('hostels')
+        .delete()
+        .eq('id', hostelId);
+
+      if (error) throw error;
+
+      // Remove from local context
+      if (deleteHostel) {
+        deleteHostel(hostelId);
+      }
+
+      alert('Hostel deleted successfully!');
+      onBack();
+    } catch (error: any) {
+      console.error('Error deleting hostel:', error);
+      alert(`Failed to delete hostel: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading hostel data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -263,6 +456,17 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
             </p>
           </div>
         </div>
+        {isEditing && (
+          <Button
+            type="button"
+            variant="danger"
+            onClick={handleDeleteHostel}
+            disabled={isSubmitting}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Delete Hostel
+          </Button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -278,6 +482,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
               placeholder="e.g., Umoja Hostels"
               error={errors.name}
               required
+              disabled={isSubmitting}
             />
 
             <div>
@@ -289,8 +494,9 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                 onChange={(e) => handleInputChange('university', e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors ${
                   errors.university ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } ${isSubmitting ? 'bg-gray-100' : ''}`}
                 required
+                disabled={isSubmitting}
               >
                 <option value="">Select university</option>
                 {universities.map(uni => (
@@ -307,6 +513,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
               placeholder="e.g., Near University of Nairobi"
               error={errors.location}
               required
+              disabled={isSubmitting}
             />
 
             <Input
@@ -317,6 +524,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
               placeholder="15000"
               error={errors.price}
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -330,9 +538,10 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
               rows={4}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } ${isSubmitting ? 'bg-gray-100' : ''}`}
               placeholder="Describe your hostel, its features, and what makes it special..."
               required
+              disabled={isSubmitting}
             />
             {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description}</p>}
           </div>
@@ -344,7 +553,11 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
           
           <div className="space-y-4">
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+              <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                isSubmitting 
+                  ? 'bg-gray-100 border-gray-300' 
+                  : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+              }`}>
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 mb-4 text-gray-500" />
                   <p className="mb-2 text-sm text-gray-500">
@@ -358,6 +571,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
               </label>
             </div>
@@ -374,7 +588,8 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      disabled={isSubmitting}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -405,8 +620,11 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                   className={`p-3 text-sm border rounded-lg transition-colors ${
                     formData.amenities.includes(amenity)
                       ? 'bg-teal-50 border-teal-500 text-teal-700'
+                      : isSubmitting
+                      ? 'border-gray-300 bg-gray-100'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
+                  disabled={isSubmitting}
                 >
                   {amenity}
                 </button>
@@ -419,11 +637,12 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                 value={newAmenity}
                 onChange={(e) => setNewAmenity(e.target.value)}
                 className="flex-1"
+                disabled={isSubmitting}
               />
               <Button
                 type="button"
                 onClick={() => handleAddAmenity(newAmenity)}
-                disabled={!newAmenity.trim()}
+                disabled={!newAmenity.trim() || isSubmitting}
               >
                 Add
               </Button>
@@ -440,7 +659,8 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     <button
                       type="button"
                       onClick={() => handleRemoveAmenity(amenity)}
-                      className="ml-2 text-teal-600 hover:text-teal-800"
+                      className="ml-2 text-teal-600 hover:text-teal-800 disabled:opacity-50"
+                      disabled={isSubmitting}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -456,7 +676,11 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Room Types *</h2>
-            <Button type="button" onClick={handleAddRoomType}>
+            <Button 
+              type="button" 
+              onClick={handleAddRoomType}
+              disabled={isSubmitting}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Room Type
             </Button>
@@ -475,7 +699,8 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                   <button
                     type="button"
                     onClick={() => handleRemoveRoomType(index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                    disabled={isSubmitting}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -489,7 +714,8 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     <select
                       value={room.type}
                       onChange={(e) => handleUpdateRoomType(index, 'type', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-gray-100"
+                      disabled={isSubmitting}
                     >
                       {roomTypeOptions.map(type => (
                         <option key={type} value={type}>{type}</option>
@@ -503,6 +729,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     value={room.price.toString()}
                     onChange={(e) => handleUpdateRoomType(index, 'price', parseFloat(e.target.value) || 0)}
                     placeholder="15000"
+                    disabled={isSubmitting}
                   />
 
                   <Input
@@ -511,6 +738,7 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     value={room.total.toString()}
                     onChange={(e) => handleUpdateRoomType(index, 'total', parseInt(e.target.value) || 0)}
                     placeholder="10"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -522,8 +750,9 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                     value={room.description}
                     onChange={(e) => handleUpdateRoomType(index, 'description', e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none disabled:bg-gray-100"
                     placeholder="Describe this room type..."
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -537,12 +766,13 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                       value={newFeature}
                       onChange={(e) => setNewFeature(e.target.value)}
                       className="flex-1"
+                      disabled={isSubmitting}
                     />
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => handleAddFeatureToRoom(index, newFeature)}
-                      disabled={!newFeature.trim()}
+                      disabled={!newFeature.trim() || isSubmitting}
                     >
                       Add
                     </Button>
@@ -558,7 +788,8 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
                           <button
                             type="button"
                             onClick={() => handleRemoveFeatureFromRoom(index, feature)}
-                            className="ml-1 text-gray-600 hover:text-gray-800"
+                            className="ml-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                            disabled={isSubmitting}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -574,7 +805,11 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 mb-4">No room types added yet</p>
-                <Button type="button" onClick={handleAddRoomType}>
+                <Button 
+                  type="button" 
+                  onClick={handleAddRoomType}
+                  disabled={isSubmitting}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add First Room Type
                 </Button>
@@ -586,7 +821,12 @@ const AddEditHostelPage: React.FC<AddEditHostelPageProps> = ({ hostelId, onBack 
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onBack}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

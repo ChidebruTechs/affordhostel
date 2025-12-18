@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, DollarSign, CheckCircle, Star, TrendingUp, Shield, Users, Camera, BarChart3, MessageSquare, Clock, Award } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { useApp } from '../context/AppContext';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const PricingPlansPage: React.FC = () => {
   const { setCurrentPage } = useApp();

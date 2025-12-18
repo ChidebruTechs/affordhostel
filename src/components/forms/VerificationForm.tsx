@@ -3,7 +3,7 @@ import { X, Upload, Camera, MapPin, Star, Building, Users, CheckCircle, AlertTri
 import { useApp } from '../../context/AppContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
+import Input from '../Input';
 
 interface VerificationFormProps {
   hostelId: string;
