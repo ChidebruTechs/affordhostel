@@ -14,6 +14,8 @@ interface AppContextType {
   setUser: (user: User | null) => void;
   currentRole: string;
   setCurrentRole: (role: string) => void;
+  currentPage: string;
+  setCurrentPage: (page: string, params?: any) => void;
   hostels: Hostel[];
   bookings: Booking[];
   notifications: Notification[];
@@ -62,6 +64,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [currentRole, setCurrentRole] = useState('student');
+  const [currentPage, setCurrentPageState] = useState('home');
   const [hostels, setHostels] = useState<Hostel[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -122,6 +125,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setNotifications([]);
     setWishlist([]);
     setReviews([]);
+  };
+
+  const setCurrentPage = (page: string, params?: any) => {
+    setCurrentPageState(page);
+    const pageRoutes: Record<string, string> = {
+      'home': '/',
+      'login': '/login',
+      'signup': '/signup',
+      'forgot-password': '/forgot-password',
+      'hostels': '/hostels',
+      'hostel-detail': `/hostels/${params?.hostelId || ':id'}`,
+      'about': '/about',
+      'contact': '/contact',
+      'dashboard': '/dashboard',
+      'landlord': '/landlord',
+      'agent': '/agent',
+      'admin': '/admin',
+      'settings': '/settings',
+      'profile': '/profile',
+      'bookings': '/bookings',
+      'wishlist': '/wishlist',
+      'analytics': '/analytics',
+      'messages': '/messages',
+      'notifications': '/notifications',
+      'add-edit-hostel': '/add-edit-hostel',
+      'how-to-book': '/how-to-book',
+      'student-guide': '/student-guide',
+      'payment-options': '/payment-options',
+      'safety-tips': '/safety-tips',
+      'list-property': '/list-property',
+      'landlord-guide': '/landlord-guide',
+      'verification': '/verification',
+      'pricing': '/pricing',
+    };
+    const route = pageRoutes[page];
+    if (route) {
+      navigate(route);
+    }
   };
 
   const fetchUserProfile = async (userId: string) => {
@@ -1006,6 +1047,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUser,
       currentRole,
       setCurrentRole,
+      currentPage,
+      setCurrentPage,
       hostels,
       bookings,
       notifications,
