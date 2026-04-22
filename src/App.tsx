@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import HostelsPage from './pages/HostelsPage';
 import HostelDetailPage from './pages/HostelDetailPage';
 import ContactPage from './pages/ContactPage';
@@ -386,6 +387,11 @@ const AppRouter: React.FC = () => {
       <Route path="/forgot-password" element={
         <PublicLayout>
           <ForgotPasswordPage />
+        </PublicLayout>
+      } />
+      <Route path="/reset-password" element={
+        <PublicLayout>
+          <ResetPasswordPage />
         </PublicLayout>
       } />
       <Route path="/how-to-book" element={
