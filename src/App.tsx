@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/layout/Header';
@@ -324,6 +324,10 @@ const WishlistPage: React.FC = () => {
 const AppRouter: React.FC = () => {
   const { currentRole } = useApp();
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   const getDashboardComponent = () => {
     switch (currentRole) {
