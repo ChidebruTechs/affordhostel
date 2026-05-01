@@ -207,14 +207,22 @@ const LoginPage: React.FC = () => {
 
 
 
-          <div className="mt-6 pt-4 border-t text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <button onClick={() => navigate('/signup')} className="text-purple-600 font-medium">
-                Sign up
-              </button>
-            </p>
-          </div>
+           <div className="mt-6 pt-4 border-t text-center">
+             <p className="text-sm text-gray-600">
+               Don't have an account?{' '}
+               <button onClick={() => {
+                   const urlParams = new URLSearchParams(window.location.search);
+                   const accessParam = urlParams.get('access');
+                   if (accessParam) {
+                     navigate(`/signup?access=${accessParam}`);
+                   } else {
+                     navigate('/signup');
+                   }
+                 }} className="text-purple-600 font-medium">
+                 Sign up
+               </button>
+             </p>
+           </div>
         </Card>
       </div>
     </div>

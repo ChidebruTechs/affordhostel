@@ -5,7 +5,7 @@ import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { universities, towns } from '../data/universitiesAndTowns';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, Building2, GraduationCap, ChevronRight, ChevronLeft, Mail, Phone, Lock, User, Briefcase, FileText, Banknote, AlertCircle } from 'lucide-react';
+import { CheckCircle, Building2, GraduationCap, ChevronRight, ChevronLeft, Mail, Phone, Lock, User, Briefcase, FileText, Banknote, AlertCircle, Shield } from 'lucide-react';
 
 const SignupPage: React.FC = () => {
   const { setCurrentPage } = useApp();
@@ -33,98 +33,105 @@ const SignupPage: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const privileged = urlParams.get('access') === 'privileged';
 
-  const roles = privileged
-    ? [
-        { value: 'student', label: 'Student', icon: GraduationCap },
-        { value: 'landlord', label: 'Landlord', icon: Building2 },
-      ]
-    : [
-        { value: 'student', label: 'Student', icon: GraduationCap },
-        { value: 'landlord', label: 'Landlord', icon: Building2 },
-      ];
+   const roles = privileged
+     ? [
+         { value: 'student', label: 'Student', icon: GraduationCap },
+         { value: 'landlord', label: 'Landlord', icon: Building2 },
+         { value: 'agent', label: 'Agent', icon: Building2 },
+         { value: 'admin', label: 'Admin', icon: Shield }
+       ]
+     : [
+         { value: 'student', label: 'Student', icon: GraduationCap },
+         { value: 'landlord', label: 'Landlord', icon: Building2 }
+       ];
 
-  const validate = (s: number) => {
-    const errs: Record<string, string> = {};
-    if (s === 1) {
-      if (!form.firstName.trim()) errs.firstName = 'Required';
-      if (!form.lastName.trim()) errs.lastName = 'Required';
-      if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
-      if (!form.phone.trim()) errs.phone = 'Required';
-      if (form.password.length < 8) errs.password = 'At least 8 characters';
-      if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords must match';
-    }
-    if (s === 2) {
-      if (form.role === 'student') {
-        if (!form.university) errs.university = 'Required';
-        if (!form.studentId) errs.studentId = 'Required';
-        if (!form.course) errs.course = 'Required';
-        if (!form.yearOfStudy) errs.yearOfStudy = 'Required';
-      } else if (form.role === 'landlord') {
-        if (!form.businessName) errs.businessName = 'Required';
-        if (!form.taxPin) errs.taxPin = 'Required';
-        if (!form.bankAccount) errs.bankAccount = 'Required';
-      }
-    }
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+   const validate = (s: number) => {
+     const errs: Record<string, string> = {};
+     if (s === 1) {
+       if (!form.firstName.trim()) errs.firstName = 'Required';
+       if (!form.lastName.trim()) errs.lastName = 'Required';
+       if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
+       if (!form.phone.trim()) errs.phone = 'Required';
+       if (form.password.length < 8) errs.password = 'At least 8 characters';
+       if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords must match';
+     }
+     if (s === 2) {
+       if (form.role === 'student') {
+         if (!form.university) errs.university = 'Required';
+         if (!form.studentId) errs.studentId = 'Required';
+         if (!form.course) errs.course = 'Required';
+         if (!form.yearOfStudy) errs.yearOfStudy = 'Required';
+       } else if (form.role === 'landlord') {
+         if (!form.businessName) errs.businessName = 'Required';
+         if (!form.taxPin) errs.taxPin = 'Required';
+         if (!form.bankAccount) errs.bankAccount = 'Required';
+       }
+       // Agent and Admin roles don't require additional fields beyond basic info
+     }
+     setErrors(errs);
+     return Object.keys(errs).length === 0;
+   };
 
   const next = () => { if (validate(1)) setStep(2); };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate(2)) return;
+   const submit = async (e: React.FormEvent) => {
+     e.preventDefault();
+     if (!validate(2)) return;
 
-    setLoading(true);
-    setErrors({});
-    setSuccess('');
+     setLoading(true);
+     setErrors({});
+     setSuccess('');
 
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        phone: form.phone,
-        options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
-      });
+     try {
+       const { data: authData, error: authError } = await supabase.auth.signUp({
+         email: form.email,
+         password: form.password,
+         phone: form.phone,
+         options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
+       });
 
-      if (authError) throw authError;
+       if (authError) throw authError;
 
-      if (authData.user) {
-        const roleData: Record<string, any> = { user_id: authData.user.id };
-        let table = '';
+       if (authData.user) {
+         const roleData: Record<string, any> = { user_id: authData.user.id };
+         let table = '';
 
-        if (form.role === 'student') {
-          table = 'students';
-          roleData.university = form.university;
-          roleData.student_id = form.studentId;
-          roleData.course = form.course;
-          roleData.year_of_study = form.yearOfStudy;
-          roleData.is_verified = false;
-        } else if (form.role === 'landlord') {
-          table = 'landlords';
-          roleData.business_name = form.businessName;
-          roleData.tax_pin = form.taxPin;
-          roleData.bank_account = form.bankAccount;
-          roleData.verification_status = 'pending';
-        }
+         if (form.role === 'student') {
+           table = 'students';
+           roleData.university = form.university;
+           roleData.student_id = form.studentId;
+           roleData.course = form.course;
+           roleData.year_of_study = form.yearOfStudy;
+           roleData.is_verified = false;
+         } else if (form.role === 'landlord') {
+           table = 'landlords';
+           roleData.business_name = form.businessName;
+           roleData.tax_pin = form.taxPin;
+           roleData.bank_account = form.bankAccount;
+           roleData.verification_status = 'pending';
+         } else if (form.role === 'agent') {
+           table = 'agents';
+         } else if (form.role === 'admin') {
+           table = 'admins';
+         }
 
-        if (table) {
-          await supabase.from(table).insert(roleData);
-        }
+         if (table) {
+           await supabase.from(table).insert(roleData);
+         }
 
-        setSuccess('Account created! Please check your email to verify.');
-        setTimeout(() => setCurrentPage('login'), 3000);
-      }
-    } catch (err: any) {
-      if (err.message?.includes('already registered')) {
-        setErrors({ email: 'Email already registered' });
-      } else {
-        setErrors({ submit: err.message || 'Signup failed' });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+         setSuccess('Account created! Please check your email to verify.');
+         setTimeout(() => setCurrentPage('login'), 3000);
+       }
+     } catch (err: any) {
+       if (err.message?.includes('already registered')) {
+         setErrors({ email: 'Email already registered' });
+       } else {
+         setErrors({ submit: err.message || 'Signup failed' });
+       }
+     } finally {
+       setLoading(false);
+     }
+   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
