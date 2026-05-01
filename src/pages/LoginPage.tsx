@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { supabase } from '../../lib/supabase';
-import { Mail, Lock, GraduationCap, Building2, Shield, AlertCircle } from 'lucide-react';
+import { Mail, GraduationCap, Building2, Shield, AlertCircle } from 'lucide-react';
+import type { User } from '../types';
+
+// Helper to add a timeout to a promise (30s)
+const withTimeout = <T,>(ms: number, promise: Promise<T>, errorMessage: string): Promise<T> => {
+  const timeoutPromise: Promise<never> = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(errorMessage)), ms)
+  );
+  return Promise.race([promise, timeoutPromise]);
+};
 
 const LoginPage: React.FC = () => {
-  const { login, setCurrentPage } = useApp();
+  const { setUser, setCurrentRole } = useApp();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,63 +40,67 @@ const LoginPage: React.FC = () => {
         throw new Error('Please enter both email and password');
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Sign in with Supabase (30s timeout)
+      const signInPromise = supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
+      const { data: authData, error: authError } = await withTimeout(
+        30000,
+        signInPromise,
+        'Login request timed out. Please check your connection and try again.'
+      );
 
       if (authError) throw authError;
       if (!authData.user) throw new Error('Login failed');
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
+      // Extract info from user metadata (set during signup)
+      const meta = authData.user.user_metadata || {};
+      const role = meta.role;
+      const firstName = meta.first_name || '';
+      const lastName = meta.last_name || '';
 
-      if (profileError) throw new Error(`Unable to fetch user profile: ${profileError.message}`);
-      if (!profile) throw new Error('User profile not found');
+      if (!role) {
+        // No role in metadata; cannot proceed without profile lookup
+        throw new Error('User role not found. Please contact support.');
+      }
 
-      if (profile.role !== formData.role) {
+      // Role validation
+      if (role !== formData.role) {
         await supabase.auth.signOut();
-        throw new Error(`Please login as a ${profile.role}`);
+        throw new Error(`Please login as a ${role}`);
       }
 
-      let roleData = {};
-      const tables: Record<string, string> = {
-        student: 'students',
-        landlord: 'landlords',
-        agent: 'agents',
-        admin: 'admins'
-      };
-      const table = tables[formData.role];
-      if (table) {
-        const { data } = await supabase.from(table).select('*').eq('user_id', authData.user.id).single();
-        roleData = data || {};
-      }
-
-      const userSession = {
+      // Build minimal User object
+      const fullName = [firstName, lastName].filter(Boolean).join(' ') || authData.user.email?.split('@')[0] || 'User';
+      const user: User = {
         id: authData.user.id,
-        email: authData.user.email,
-        role: profile.role,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        phone: profile.phone,
-        ...roleData
+        name: fullName,
+        email: authData.user.email || '',
+        phone: '', // will be fetched later by the auth listener
+        role: role,
+        verified: false, // will be updated later
+        createdAt: authData.user.created_at ? new Date(authData.user.created_at) : new Date(),
+        avatar: meta.avatar_url || undefined
       };
 
-      if (typeof login === 'function') {
-        login(userSession);
-      } else {
-        throw new Error('Login function not available');
-      }
+      // Set user in context
+      setUser(user);
+      setCurrentRole(role);
+
+      // Navigate based on role
+      let redirectPath = '/dashboard';
+      if (role === 'landlord') redirectPath = '/landlord';
+      else if (role === 'agent') redirectPath = '/agent';
+      else if (role === 'admin') redirectPath = '/admin';
+      navigate(redirectPath);
     } catch (err: any) {
       if (err.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password');
       } else if (err.message?.includes('Email not confirmed')) {
         setError('Please verify your email first');
-      } else if (err.message?.includes('User profile not found')) {
-        setError('Profile not found. Please sign up first.');
+      } else if (err.message?.includes('User profile not found') || err.message?.includes('role not found')) {
+        setError(err.message);
       } else if (err.message?.includes('Please login as a')) {
         setError(err.message);
       } else {
@@ -94,9 +109,9 @@ const LoginPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+   };
 
-  const roles = hasPrivilegedAccess 
+   const roles = hasPrivilegedAccess
     ? [
         { value: 'student', label: 'Student', icon: GraduationCap },
         { value: 'landlord', label: 'Landlord', icon: Building2 },
@@ -180,7 +195,7 @@ const LoginPage: React.FC = () => {
                 <input type="checkbox" className="rounded border-gray-300" />
                 Remember
               </label>
-              <button type="button" onClick={() => setCurrentPage('forgot-password')} className="text-purple-600 hover:text-purple-700">
+              <button type="button" onClick={() => navigate('/forgot-password')} className="text-purple-600 hover:text-purple-700">
                 Forgot password?
               </button>
             </div>
@@ -195,7 +210,7 @@ const LoginPage: React.FC = () => {
           <div className="mt-6 pt-4 border-t text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <button onClick={() => setCurrentPage('signup')} className="text-purple-600 font-medium">
+              <button onClick={() => navigate('/signup')} className="text-purple-600 font-medium">
                 Sign up
               </button>
             </p>

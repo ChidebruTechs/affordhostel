@@ -90,16 +90,7 @@ const SignupPage: React.FC = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        await supabase.from('profiles').insert({
-          id: authData.user.id,
-          first_name: form.firstName,
-          last_name: form.lastName,
-          email: form.email,
-          phone: form.phone,
-          role: form.role,
-        });
-
-        const roleData: Record<string, any> = { user_id: authData.user.id, is_verified: false };
+        const roleData: Record<string, any> = { user_id: authData.user.id };
         let table = '';
 
         if (form.role === 'student') {
@@ -108,6 +99,7 @@ const SignupPage: React.FC = () => {
           roleData.student_id = form.studentId;
           roleData.course = form.course;
           roleData.year_of_study = form.yearOfStudy;
+          roleData.is_verified = false;
         } else if (form.role === 'landlord') {
           table = 'landlords';
           roleData.business_name = form.businessName;

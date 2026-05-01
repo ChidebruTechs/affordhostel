@@ -67,13 +67,17 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ onToggleMobileSidebar
     fetchUserData();
 
     // Set up real-time subscription for notifications
+    if (!user?.id) {
+      console.warn('[DashboardNavbar] Cannot setup notifications subscription: user.id is undefined');
+      return;
+    }
     const channel = supabase
       .channel('notifications-channel')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${user?.id}`
+        filter: `user_id=eq.${user.id}`
       }, (payload) => {
         setNotifications(prev => [payload.new as Notification, ...prev]);
       })
@@ -81,7 +85,7 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({ onToggleMobileSidebar
         event: 'UPDATE',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${user?.id}`
+        filter: `user_id=eq.${user.id}`
       }, (payload) => {
         setNotifications(prev => 
           prev.map(notification => 

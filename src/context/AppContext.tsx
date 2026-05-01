@@ -23,7 +23,7 @@ interface AppContextType {
   reviews: Review[];
   companyInfo: CompanyInfo;
   isAuthenticated: boolean;
-  login: (userData: any) => Promise<void>;
+  login: (user: User) => Promise<void>;
   logout: () => Promise<void>;
   addToWishlist: (hostelId: string) => Promise<void>;
   removeFromWishlist: (hostelId: string) => Promise<void>;
@@ -105,7 +105,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
-          await fetchUserProfile(session.user.id);
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (err) {
+            console.error('Error fetching profile after sign in:', err);
+          }
         } else if (event === 'SIGNED_OUT') {
           clearAppData();
         }
@@ -168,7 +172,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const fetchUserProfile = async (userId: string) => {
     try {
       setLoading(true);
-      
+
+      // Validate userId is a proper UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        throw new Error('Invalid user ID format');
+      }
+
       // Fetch user profile from Supabase
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -179,14 +188,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (profileError) throw profileError;
 
       if (profile) {
+        const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email?.split('@')[0] || 'User';
         const userObj: User = {
           id: profile.id,
-          name: profile.name || profile.email?.split('@')[0] || 'User',
+          name: fullName,
           email: profile.email,
-          phone: profile.phone,
+          phone: profile.phone || '',
           role: profile.role || 'student',
-          university: profile.university,
-          studentId: profile.student_id,
+          university: undefined,
+          studentId: undefined,
           verified: profile.verified || false,
           createdAt: new Date(profile.created_at),
           avatar: profile.avatar_url
@@ -195,65 +205,207 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUser(userObj);
         setCurrentRole(userObj.role);
 
-        // Fetch user data based on role
-        await Promise.all([
-          fetchHostels(),
-          fetchBookings(),
-          fetchNotifications(),
-          fetchWishlist(),
-          fetchCompanyInfo()
-        ]);
-      }
-    } catch (err: any) {
-      console.error('Error fetching user profile:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        // --- Fetch hostels ---
+        try {
+          const { data: hostelsData, error: hostelsError } = await supabase
+            .from('hostels')
+            .select(`
+              *,
+              room_types(*),
+              profiles:landlord_id (name, email, phone)
+            `)
+            .order('created_at', { ascending: false });
 
-  const login = async (userData: any) => {
-    try {
-      setLoading(true);
-      
-      // Sign in with Supabase Auth
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: userData.email,
-        password: userData.password
-      });
+          if (!hostelsError && hostelsData) {
+            const transformedHostels: Hostel[] = hostelsData.map((hostel: any) => ({
+              id: hostel.id,
+              name: hostel.name,
+              description: hostel.description,
+              price: hostel.price,
+              location: hostel.location,
+              university: hostel.university,
+              images: hostel.images || [],
+              amenities: hostel.amenities || [],
+              rating: hostel.rating || 0,
+              reviews: hostel.reviews || 0,
+              roomTypes: hostel.room_types?.map((room: any) => ({
+                id: room.id,
+                type: room.type,
+                price: room.price,
+                available: room.available || 0,
+                total: room.total,
+                features: room.features || []
+              })) || [],
+              landlordId: hostel.landlord_id,
+              verified: hostel.verified || false,
+              available: hostel.available || true,
+              verificationStatus: hostel.verification_status || 'pending_submission',
+              assignedAgentId: hostel.assigned_agent_id
+            }));
+            setHostels(transformedHostels);
+          }
+        } catch (err) {
+          console.error('Error fetching hostels:', err);
+        }
 
-      if (authError) throw authError;
+        // --- Fetch bookings based on role ---
+        try {
+          let shouldFetchBookings = true;
+          let bookingsQuery = supabase
+            .from('bookings')
+            .select(`
+              *,
+              hostels(*),
+              profiles:user_id (name, email)
+            `)
+            .order('created_at', { ascending: false });
 
-      if (data.user) {
-        await fetchUserProfile(data.user.id);
-        
-        // Navigate to appropriate dashboard based on role
-        const role = data.user.user_metadata?.role || 'student';
-        switch (role) {
-          case 'student':
-            navigate('/dashboard');
-            break;
-          case 'landlord':
-            navigate('/landlord');
-            break;
-          case 'agent':
-            navigate('/agent');
-            break;
-          case 'admin':
-            navigate('/admin');
-            break;
-          default:
-            navigate('/dashboard');
+          if (userObj.role === 'student') {
+            bookingsQuery = bookingsQuery.eq('user_id', userId);
+          } else if (userObj.role === 'landlord' || userObj.role === 'admin') {
+            const { data: ownedHostels } = await supabase
+              .from('hostels')
+              .select('id')
+              .eq('landlord_id', userId);
+            const hostelIds = (ownedHostels || []).map((h: any) => h.id);
+            if (hostelIds.length > 0) {
+              bookingsQuery = bookingsQuery.in('hostel_id', hostelIds);
+            } else {
+              // No hostels owned, so no bookings
+              setBookings([]);
+              shouldFetchBookings = false;
+            }
+          }
+
+          if (shouldFetchBookings) {
+            const { data: bookingsData, error: bookingsError } = await bookingsQuery;
+            if (!bookingsError && bookingsData) {
+              const transformedBookings: Booking[] = bookingsData.map((booking: any) => ({
+                id: booking.id,
+                hostelId: booking.hostel_id,
+                studentId: booking.user_id,
+                roomType: booking.room_type,
+                checkIn: new Date(booking.check_in),
+                checkOut: new Date(booking.check_out),
+                amount: booking.amount,
+                status: booking.status,
+                createdAt: new Date(booking.created_at)
+              }));
+              setBookings(transformedBookings);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching bookings:', err);
+        }
+
+
+        // --- Fetch notifications ---
+        try {
+          const { data: notifsData, error: notifsError } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+          if (!notifsError && notifsData) {
+            const transformedNotifications: Notification[] = notifsData.map((notification: any) => ({
+              id: notification.id,
+              userId: notification.user_id,
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              read: notification.read,
+              action_url: notification.action_url,
+              createdAt: new Date(notification.created_at)
+            }));
+            setNotifications(transformedNotifications);
+          }
+        } catch (err) {
+          console.error('Error fetching notifications:', err);
+        }
+
+        // --- Fetch wishlist ---
+        try {
+          const { data: wishlistData, error: wishlistError } = await supabase
+            .from('wishlists')
+            .select(`
+              *,
+              hostels(*)
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+          if (!wishlistError && wishlistData) {
+            const transformedWishlist: WishlistItem[] = wishlistData.map((item: any) => ({
+              id: item.id,
+              userId: item.user_id,
+              hostelId: item.hostel_id,
+              createdAt: new Date(item.created_at)
+            }));
+            setWishlist(transformedWishlist);
+          }
+        } catch (err) {
+          console.error('Error fetching wishlist:', err);
+        }
+
+        // --- Fetch company info ---
+        try {
+          const { data: companyData, error: companyError } = await supabase
+            .from('company_info')
+            .select('*')
+            .single();
+
+          if (companyError && companyError.code === 'PGRST116') {
+            // No company info, ignore
+          } else if (companyData) {
+            setCompanyInfo({
+              mission: companyData.mission || initialCompanyInfo.mission,
+              vision: companyData.vision || initialCompanyInfo.vision,
+              team: companyData.team || []
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching company info:', err);
         }
       }
     } catch (err: any) {
-      console.error('Error logging in:', err);
+      console.error('Error in fetchUserProfile:', err);
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
   };
+
+   const login = async (user: User) => {
+     try {
+       setLoading(true);
+       setUser(user);
+       setCurrentRole(user.role);
+       // Navigate based on role
+       switch (user.role) {
+         case 'student':
+           navigate('/dashboard');
+           break;
+         case 'landlord':
+           navigate('/landlord');
+           break;
+         case 'agent':
+           navigate('/agent');
+           break;
+         case 'admin':
+           navigate('/admin');
+           break;
+         default:
+           navigate('/dashboard');
+       }
+     } catch (err: any) {
+       setError(err.message);
+       throw err;
+     } finally {
+       setLoading(false);
+     }
+   };
 
   const logout = async () => {
     try {
@@ -371,8 +523,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       setBookings(transformedBookings);
     } catch (err: any) {
-      console.error('Error fetching bookings:', err);
+      console.error('Error logging in:', err);
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }

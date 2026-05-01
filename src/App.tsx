@@ -501,6 +501,13 @@ const AppRouter: React.FC = () => {
       } />
 
       {/* Role-specific Routes */}
+      <Route path="/landlord" element={
+        <ProtectedRoute allowedRoles={['landlord', 'admin']}>
+          <DashboardLayout>
+            <LandlordDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/agent" element={
         <ProtectedRoute allowedRoles={['agent', 'admin']}>
           <DashboardLayout>
