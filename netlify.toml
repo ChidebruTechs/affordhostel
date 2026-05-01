@@ -3,8 +3,8 @@
   publish = "dist"
 
 [build.environment]
-VITE_SUPABASE_URL="https://mfnxuqfplbuvrspgyydt.supabase.co"
-VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbnh1cWZwbGJ1dnJzcGd5eWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTcxMzcsImV4cCI6MjA5MjM3MzEzN30.V_GK_tOO7uzqcyWc3WzZtXhNBE-9y1BqecUluxZCpyQ"
+VITE_SUPABASE_URL="https://uhrqepfndtqrhmrckopw.supabase.co"
+VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocnFlcGZuZHRxcmhtcmNrb3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczODI2MzcsImV4cCI6MjA5Mjk1ODYzN30.3_u3dbiq9oeyUm0nDtu-hXmmHtvwP-Avmplr5rwi2HE"
 
 [[redirects]]
   from = "/*"
