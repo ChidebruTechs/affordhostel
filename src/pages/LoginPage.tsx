@@ -35,16 +35,22 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    try {
-      if (!formData.email || !formData.password) {
-        throw new Error('Please enter both email and password');
-      }
+     try {
+       if (!formData.email || !formData.password) {
+         throw new Error('Please enter both email and password');
+       }
 
-      // Sign in with Supabase (30s timeout)
-      const signInPromise = supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+       // Basic email format validation
+       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+       if (!emailRegex.test(formData.email)) {
+         throw new Error('Please enter a valid email address');
+       }
+
+       // Sign in with Supabase (30s timeout)
+       const signInPromise = supabase.auth.signInWithPassword({
+         email: formData.email,
+         password: formData.password,
+       });
       const { data: authData, error: authError } = await withTimeout(
         30000,
         signInPromise,
@@ -94,21 +100,31 @@ const LoginPage: React.FC = () => {
       else if (role === 'agent') redirectPath = '/agent';
       else if (role === 'admin') redirectPath = '/admin';
       navigate(redirectPath);
-    } catch (err: any) {
-      if (err.message?.includes('Invalid login credentials')) {
-        setError('Invalid email or password');
-      } else if (err.message?.includes('Email not confirmed')) {
-        setError('Please verify your email first');
-      } else if (err.message?.includes('User profile not found') || err.message?.includes('role not found')) {
-        setError(err.message);
-      } else if (err.message?.includes('Please login as a')) {
-        setError(err.message);
-      } else {
-        setError(err.message || 'Login failed. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
+     } catch (err: any) {
+       // Log error details for debugging (only in development)
+       if (import.meta.env.DEV) {
+         console.error('Login error details:', err);
+         if (err.name) console.error('Error name:', err.name);
+         if (err.message) console.error('Error message:', err.message);
+         if (err.stack) console.error('Error stack:', err.stack);
+       }
+
+       if (err.name === 'AuthInvalidCredentialsError') {
+         setError('Invalid email or password');
+       } else if (err.message?.includes('Invalid login credentials')) {
+         setError('Invalid email or password');
+       } else if (err.message?.includes('Email not confirmed')) {
+         setError('Please verify your email first');
+       } else if (err.message?.includes('User profile not found') || err.message?.includes('role not found')) {
+         setError(err.message);
+       } else if (err.message?.includes('Please login as a')) {
+         setError(err.message);
+       } else {
+         setError(err.message || 'Login failed. Please try again.');
+       }
+     } finally {
+       setIsLoading(false);
+     }
    };
 
    const roles = hasPrivilegedAccess
