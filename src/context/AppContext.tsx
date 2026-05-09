@@ -248,17 +248,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           console.error('Error fetching hostels:', err);
         }
 
-        // --- Fetch bookings based on role ---
-        try {
-          let shouldFetchBookings = true;
-          let bookingsQuery = supabase
-            .from('bookings')
-            .select(`
-              *,
-              hostels(*),
-              profiles:user_id (name, email)
-            `)
-            .order('created_at', { ascending: false });
+         // --- Fetch bookings based on role ---
+         try {
+           let shouldFetchBookings = true;
+           let bookingsQuery = supabase
+             .from('bookings')
+             .select(`
+               *,
+               hostels(*)
+             `)
+             .order('created_at', { ascending: false });
 
           if (userObj.role === 'student') {
             bookingsQuery = bookingsQuery.eq('user_id', userId);
@@ -924,35 +923,51 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const updateUserProfile = async (updates: Partial<User>) => {
-    if (!user) throw new Error('Must be logged in to update profile');
+   const updateUserProfile = async (updates: Partial<User>) => {
+     if (!user) throw new Error('Must be logged in to update profile');
 
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: updates.name,
-          phone: updates.phone,
-          university: updates.university,
-          student_id: updates.studentId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+     try {
+       setLoading(true);
+       
+       // Build update object: split name into first_name and last_name
+       const updateData: Record<string, any> = {
+         phone: updates.phone,
+         university: updates.university,
+         student_id: updates.studentId,
+         updated_at: new Date().toISOString()
+       };
+       
+       if (updates.name !== undefined) {
+         const parts = updates.name.trim().split(/\s+/);
+         updateData.first_name = parts[0] || '';
+         updateData.last_name = parts.slice(1).join(' ') || '';
+       }
+       
+       const { error } = await supabase
+         .from('profiles')
+         .update(updateData)
+         .eq('id', user.id);
 
-      if (error) throw error;
+       if (error) throw error;
 
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-    } catch (err: any) {
-      console.error('Error updating user profile:', err);
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+       // Merge updates into user state (preserve existing fields not updated)
+       const updatedUser = { 
+         ...user, 
+         ...updates, 
+         // Ensure first/last name derived from new name if provided
+         ...(updates.name !== undefined && {
+           name: updates.name
+         })
+       };
+       setUser(updatedUser);
+     } catch (err: any) {
+       console.error('Error updating user profile:', err);
+       setError(err.message);
+       throw err;
+     } finally {
+       setLoading(false);
+     }
+   };
 
   const uploadProfilePicture = async (file: File): Promise<string> => {
     if (!user) throw new Error('Must be logged in to upload profile picture');

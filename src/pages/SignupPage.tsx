@@ -91,21 +91,30 @@ const SignupPage: React.FC = () => {
       setSuccess('');
 
       try {
+        console.log('Starting signup process for role:', form.role);
         const signUpPromise = supabase.auth.signUp({
           email: form.email,
           password: form.password,
           phone: form.phone,
           options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
         });
+        console.log('Calling Supabase signUp...');
         const { data: authData, error: authError } = await withTimeout(
           30000,
           signUpPromise,
           'Signup request timed out. Please check your connection and try again.'
         );
+        console.log('Supabase signUp response:', {
+          userId: authData.user?.id,
+          email: authData.user?.email,
+          session: authData.session ? 'present' : 'null',
+          userMeta: authData.user?.user_metadata
+        });
 
         if (authError) throw authError;
 
         if (authData.user) {
+          console.log('User created with ID:', authData.user.id);
           const roleData: Record<string, any> = { user_id: authData.user.id };
           let table = '';
 
@@ -128,18 +137,27 @@ const SignupPage: React.FC = () => {
             table = 'admins';
           }
 
+          console.log(`Inserting into ${table} with data:`, roleData);
+
           if (table) {
             const insertPromise = supabase.from(table).insert(roleData);
             const insertResponse = await withTimeout(
               30000,
               insertPromise,
-              'Failed to create profile. Please try again.'
+              'Profile creation timed out. Please try again.'
             );
-            if (insertResponse.error) throw insertResponse.error;
+            console.log('Insert response:', insertResponse);
+            if (insertResponse.error) {
+              console.error('Profile insert error:', insertResponse.error);
+              throw insertResponse.error;
+            }
           }
 
           setSuccess('Account created! Please check your email to verify.');
           setTimeout(() => setCurrentPage('login'), 3000);
+        } else {
+          console.warn('No user returned from signUp');
+          throw new Error('Signup failed - no user created');
         }
       } catch (err: any) {
         // Log error details for debugging (only in development)
@@ -147,6 +165,9 @@ const SignupPage: React.FC = () => {
           console.error('Signup error details:', err);
           if (err.name) console.error('Error name:', err.name);
           if (err.message) console.error('Error message:', err.message);
+          if (err.status) console.error('Error status:', err.status);
+          if (err.code) console.error('Error code:', err.code);
+          if (err.details) console.error('Error details:', err.details);
           if (err.stack) console.error('Error stack:', err.stack);
         }
 

@@ -60,26 +60,14 @@ const StudentDashboard: React.FC = () => {
     setError('');
     
     try {
-      // Fetch student profile to get student_id
-      const { data: studentData, error: studentError } = await supabase
-        .from('students')
-        .select('id, student_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (studentError) throw studentError;
-
-      const studentId = studentData.id;
-      const studentUserId = studentData.student_id;
-
       // Fetch stats
       await Promise.all([
-        fetchBookings(studentId),
+        fetchBookings(user.id),
         fetchWishlist(user.id),
         fetchNotifications(user.id),
         fetchReviewsCount(user.id),
-        fetchUpcomingPayments(studentUserId),
-        fetchRecentActivity(studentId),
+        fetchUpcomingPayments(user.id),
+        fetchRecentActivity(user.id),
         fetchAllHostels()
       ]);
     } catch (err: any) {
@@ -90,49 +78,49 @@ const StudentDashboard: React.FC = () => {
     }
   };
 
-  const fetchBookings = async (studentId: string) => {
-    try {
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          hostels (
-            id,
-            name,
-            location,
-            images,
-            price
-          )
-        `)
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false });
+   const fetchBookings = async (userId: string) => {
+     try {
+       const { data: bookingsData, error: bookingsError } = await supabase
+         .from('bookings')
+         .select(`
+           *,
+           hostels (
+             id,
+             name,
+             location,
+             images,
+             price
+           )
+         `)
+         .eq('user_id', userId)
+         .order('created_at', { ascending: false });
 
-      if (bookingsError) throw bookingsError;
+       if (bookingsError) throw bookingsError;
 
-      const formattedBookings = bookingsData?.map(booking => ({
-        id: booking.id,
-        hostelId: booking.hostel_id,
-        studentId: booking.student_id,
-        roomType: booking.room_type,
-        checkIn: new Date(booking.check_in),
-        checkOut: new Date(booking.check_out),
-        amount: booking.amount,
-        status: booking.status,
-        createdAt: new Date(booking.created_at),
-        hostel: booking.hostels
-      })) || [];
+       const formattedBookings = bookingsData?.map(booking => ({
+         id: booking.id,
+         hostelId: booking.hostel_id,
+         studentId: booking.user_id,
+         roomType: booking.room_type,
+         checkIn: new Date(booking.check_in),
+         checkOut: new Date(booking.check_out),
+         amount: booking.amount,
+         status: booking.status,
+         createdAt: new Date(booking.created_at),
+         hostel: booking.hostels
+       })) || [];
 
-      setBookings(formattedBookings);
-      
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        activeBookings: formattedBookings.filter(b => b.status === 'confirmed').length
-      }));
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
+       setBookings(formattedBookings);
+       
+       // Update stats
+       setStats(prev => ({
+         ...prev,
+         activeBookings: formattedBookings.filter(b => b.status === 'confirmed').length
+       }));
+     } catch (error) {
+       console.error('Error fetching bookings:', error);
+     }
+   };
 
   const fetchWishlist = async (userId: string) => {
     try {
@@ -213,74 +201,71 @@ const StudentDashboard: React.FC = () => {
     }
   };
 
-  const fetchUpcomingPayments = async (studentUserId: string) => {
-    try {
-      // In a real app, this would come from a payments table
-      // For now, we'll get upcoming payments from bookings
-      const { data: upcomingPaymentsData, error: paymentsError } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          amount,
-          check_in,
-          hostels (
-            name
-          )
-        `)
-        .eq('student_id', studentUserId)
-        .gte('check_in', new Date().toISOString())
-        .order('check_in', { ascending: true })
-        .limit(3);
+   const fetchUpcomingPayments = async (userId: string) => {
+     try {
+       // In a real app, this would come from a payments table
+       // For now, we'll get upcoming payments from bookings
+       const { data: upcomingPaymentsData, error: paymentsError } = await supabase
+         .from('bookings')
+         .select(`
+           id,
+           amount,
+           check_in,
+           hostels (
+             name
+           )
+         `)
+         .eq('user_id', userId)
+         .gte('check_in', new Date().toISOString())
+         .order('check_in', { ascending: true })
+         .limit(3);
 
-      if (paymentsError) throw paymentsError;
+       if (paymentsError) throw paymentsError;
 
-      const formattedPayments: Payment[] = (upcomingPaymentsData || []).map(payment => ({
-        id: payment.id,
-        hostel_id: payment.hostel_id,
-        hostel_name: payment.hostels?.name || 'Unknown Hostel',
-        amount: payment.amount || 0,
-        due_date: payment.check_in,
-        status: 'upcoming' as const
-      }));
+       const formattedPayments: Payment[] = (upcomingPaymentsData || []).map(payment => ({
+         id: payment.id,
+         hostel_id: payment.hostel_id,
+         hostel_name: payment.hostels?.name || 'Unknown Hostel',
+         amount: payment.amount || 0,
+         due_date: payment.check_in,
+         status: 'upcoming' as const
+       }));
 
-      setUpcomingPayments(formattedPayments);
-    } catch (error) {
-      console.error('Error fetching upcoming payments:', error);
-    }
-  };
+       setUpcomingPayments(formattedPayments);
+     } catch (error) {
+       console.error('Error fetching upcoming payments:', error);
+     }
+   };
 
-  const fetchRecentActivity = async (studentId: string) => {
-    try {
-      // Fetch recent bookings
-      const { data: recentBookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('created_at, status, hostels(name)')
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false })
-        .limit(5);
+   const fetchRecentActivity = async (userId: string) => {
+     try {
+       // Fetch recent bookings
+       const { data: recentBookings, error: bookingsError } = await supabase
+         .from('bookings')
+         .select('created_at, status, hostels(name)')
+         .eq('user_id', userId)
+         .order('created_at', { ascending: false })
+         .limit(5);
 
-      if (bookingsError) throw bookingsError;
+       if (bookingsError) throw bookingsError;
 
-      // Format recent activity from bookings
-      const activityFromBookings: Activity[] = (recentBookings || []).map(booking => ({
-        id: `booking_${booking.id}`,
-        type: 'booking' as const,
-        title: `Booking ${booking.status}`,
-        description: booking.status === 'confirmed' 
-          ? `Your booking at ${booking.hostels?.name || 'a hostel'} has been confirmed`
-          : `Your booking at ${booking.hostels?.name || 'a hostel'} is ${booking.status}`,
-        time: formatTimeAgo(booking.created_at),
-        status: booking.status === 'confirmed' ? 'success' : 
-                booking.status === 'pending' ? 'warning' : 'error'
-      }));
+       // Format recent activity from bookings
+       const activityFromBookings: Activity[] = (recentBookings || []).map(booking => ({
+         id: `booking_${booking.id}`,
+         type: 'booking' as const,
+         title: `Booking ${booking.status}`,
+         description: booking.status === 'confirmed' 
+           ? `Your booking at ${booking.hostels?.name || 'a hostel'} has been confirmed`
+           : `Your booking at ${booking.hostels?.name || 'a hostel'} is ${booking.status}`,
+         time: formatTimeAgo(booking.created_at),
+         status: booking.status === 'confirmed' ? 'success' : 'info'
+       }));
 
-      // In a real app, you would fetch from an activities table
-      // For now, use bookings as recent activity
-      setRecentActivity(activityFromBookings);
-    } catch (error) {
-      console.error('Error fetching recent activity:', error);
-    }
-  };
+       setRecentActivity(activityFromBookings);
+     } catch (error) {
+       console.error('Error fetching recent activity:', error);
+     }
+   };
 
   const fetchAllHostels = async () => {
     try {
@@ -719,29 +704,19 @@ const StudentDashboard: React.FC = () => {
     </div>
   );
 
-  // Helper function to handle tab change and fetch data if needed
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    if (tab === 'bookings' && bookings.length === 0) {
-      if (user?.id) {
-        // Fetch student ID first, then bookings
-        supabase
-          .from('students')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-          .then(({ data: studentData }) => {
-            if (studentData) {
-              fetchBookings(studentData.id);
-            }
-          });
-      }
-    } else if (tab === 'wishlist' && wishlist.length === 0) {
-      if (user?.id) {
-        fetchWishlist(user.id);
-      }
-    }
-  };
+   // Helper function to handle tab change and fetch data if needed
+   const handleTabChange = (tab: string) => {
+     setActiveTab(tab);
+     if (tab === 'bookings' && bookings.length === 0) {
+       if (user?.id) {
+         fetchBookings(user.id);
+       }
+     } else if (tab === 'wishlist' && wishlist.length === 0) {
+       if (user?.id) {
+         fetchWishlist(user.id);
+       }
+     }
+   };
 
   return (
     <div className="space-y-4 md:space-y-6">

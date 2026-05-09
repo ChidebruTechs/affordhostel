@@ -47,6 +47,7 @@ CREATE TABLE public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   first_name TEXT,
   last_name TEXT,
+  name TEXT GENERATED ALWAYS AS (TRIM(COALESCE(first_name,'') || ' ' || COALESCE(last_name,''))) STORED,
   email TEXT,
   phone TEXT,
   role TEXT DEFAULT 'student' CHECK (role IN ('student', 'landlord', 'agent', 'admin', 'super_admin')),
@@ -64,11 +65,13 @@ CREATE TABLE public.profiles (
 CREATE INDEX idx_profiles_role ON public.profiles(role);
 CREATE INDEX idx_profiles_email ON public.profiles(email);
 CREATE INDEX idx_profiles_verified ON public.profiles(verified);
+CREATE INDEX idx_profiles_id_role ON public.profiles(id, role);
 
 -- Students table (additional student data)
 CREATE TABLE public.students (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
+  student_id TEXT,
   university TEXT NOT NULL,
   course TEXT,
   year_of_study TEXT,
@@ -181,6 +184,7 @@ CREATE TABLE public.bookings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   hostel_id UUID NOT NULL REFERENCES public.hostels(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
   room_type UUID NOT NULL REFERENCES public.room_types(id),
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
@@ -196,6 +200,7 @@ CREATE TABLE public.bookings (
 
 CREATE INDEX idx_bookings_hostel ON public.bookings(hostel_id);
 CREATE INDEX idx_bookings_user ON public.bookings(user_id);
+CREATE INDEX idx_bookings_student ON public.bookings(student_id);
 CREATE INDEX idx_bookings_status ON public.bookings(status);
 CREATE INDEX idx_bookings_created_at ON public.bookings(created_at);
 
@@ -533,48 +538,49 @@ ALTER TABLE public.contact_verification_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.property_verification_timeline ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verification_evidence ENABLE ROW LEVEL SECURITY;
 
--- ============================================
--- RLS POLICIES
--- ============================================
+-- Helper function to check if current user is admin/super_admin (uses JWT to avoid table recursion)
+CREATE OR REPLACE FUNCTION public.is_admin_or_super()
+RETURNS BOOLEAN AS $$
+  SELECT (auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'super_admin');
+$$ LANGUAGE sql SECURITY DEFINER;
 
--- Profiles: Users can view/update their own profile; Admins can view all
+-- Profiles policies (no INSERT policy - handled by SECURITY DEFINER trigger)
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
 
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Admins and super_admins can view all profiles" ON public.profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin'))
-);
+CREATE POLICY "Admins and super_admins can view all profiles" ON public.profiles FOR SELECT USING (public.is_admin_or_super());
 
--- Students
+-- Students: users can manage own record
 DROP POLICY IF EXISTS "Students can manage own record" ON public.students;
-CREATE POLICY "Students can manage own record" ON public.students FOR ALL USING (
-  auth.uid() = user_id OR
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
-);
+CREATE POLICY "Students can manage own record" ON public.students FOR ALL USING (auth.uid() = user_id);
 
--- Landlords
+-- Landlords: users can manage own record; admins/agents can manage all
 DROP POLICY IF EXISTS "Landlords can manage own record" ON public.landlords;
-CREATE POLICY "Landlords can manage own record" ON public.landlords FOR ALL USING (
-  auth.uid() = user_id OR
+CREATE POLICY "Landlords can manage own record" ON public.landlords FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins and agents can manage landlords" ON public.landlords;
+CREATE POLICY "Admins and agents can manage landlords" ON public.landlords FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
 );
 
--- Agents
+-- Agents: users can manage own record; admins can manage all
 DROP POLICY IF EXISTS "Agents can manage own record" ON public.agents;
-CREATE POLICY "Agents can manage own record" ON public.agents FOR ALL USING (
-  auth.uid() = user_id OR
+CREATE POLICY "Agents can manage own record" ON public.agents FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins can manage agents" ON public.agents;
+CREATE POLICY "Admins can manage agents" ON public.agents FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
+-- Admins: users can manage own record
+DROP POLICY IF EXISTS "Admins can manage own record" ON public.admins;
+CREATE POLICY "Admins can manage own record" ON public.admins FOR ALL USING (auth.uid() = user_id);
 
 -- Hostels: Public can view verified; Owners/Agents can manage
 DROP POLICY IF EXISTS "Verified hostels are viewable by everyone" ON public.hostels;
 DROP POLICY IF EXISTS "Landlords can manage own hostels" ON public.hostels;
-DROP POLICY IF EXISTS "Agents can manage assigned hostels" ON public.hostels;
+DROP POLICY IF EXISTS "Agents and admins can manage assigned hostels" ON public.hostels;
 
 CREATE POLICY "Verified hostels are viewable by everyone" ON public.hostels
   FOR SELECT USING (verified = true);
@@ -585,7 +591,7 @@ CREATE POLICY "Landlords can manage own hostels" ON public.hostels FOR ALL
 CREATE POLICY "Agents and admins can manage assigned hostels" ON public.hostels FOR ALL
   USING (
     assigned_agent_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'super_admin'))
+    OR public.is_admin_or_super()
   );
 
 -- Room types: inherit from hostel
