@@ -7,6 +7,14 @@ import { universities, towns } from '../data/universitiesAndTowns';
 import { supabase } from '../../lib/supabase';
 import { CheckCircle, Building2, GraduationCap, ChevronRight, ChevronLeft, Mail, Phone, Lock, User, Briefcase, FileText, Banknote, AlertCircle, Shield } from 'lucide-react';
 
+// Helper to add a timeout to a promise (30s)
+const withTimeout = <T,>(ms: number, promise: Promise<T>, errorMessage: string): Promise<T> => {
+  const timeoutPromise: Promise<never> = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(errorMessage)), ms)
+  );
+  return Promise.race([promise, timeoutPromise]);
+};
+
 const SignupPage: React.FC = () => {
   const { setCurrentPage } = useApp();
   const [step, setStep] = useState(1);
@@ -75,63 +83,82 @@ const SignupPage: React.FC = () => {
   const next = () => { if (validate(1)) setStep(2); };
 
    const submit = async (e: React.FormEvent) => {
-     e.preventDefault();
-     if (!validate(2)) return;
+      e.preventDefault();
+      if (!validate(2)) return;
 
-     setLoading(true);
-     setErrors({});
-     setSuccess('');
+      setLoading(true);
+      setErrors({});
+      setSuccess('');
 
-     try {
-       const { data: authData, error: authError } = await supabase.auth.signUp({
-         email: form.email,
-         password: form.password,
-         phone: form.phone,
-         options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
-       });
+      try {
+        const signUpPromise = supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
+        });
+        const { data: authData, error: authError } = await withTimeout(
+          30000,
+          signUpPromise,
+          'Signup request timed out. Please check your connection and try again.'
+        );
 
-       if (authError) throw authError;
+        if (authError) throw authError;
 
-       if (authData.user) {
-         const roleData: Record<string, any> = { user_id: authData.user.id };
-         let table = '';
+        if (authData.user) {
+          const roleData: Record<string, any> = { user_id: authData.user.id };
+          let table = '';
 
-         if (form.role === 'student') {
-           table = 'students';
-           roleData.university = form.university;
-           roleData.student_id = form.studentId;
-           roleData.course = form.course;
-           roleData.year_of_study = form.yearOfStudy;
-           roleData.is_verified = false;
-         } else if (form.role === 'landlord') {
-           table = 'landlords';
-           roleData.business_name = form.businessName;
-           roleData.tax_pin = form.taxPin;
-           roleData.bank_account = form.bankAccount;
-           roleData.verification_status = 'pending';
-         } else if (form.role === 'agent') {
-           table = 'agents';
-         } else if (form.role === 'admin') {
-           table = 'admins';
-         }
+          if (form.role === 'student') {
+            table = 'students';
+            roleData.university = form.university;
+            roleData.student_id = form.studentId;
+            roleData.course = form.course;
+            roleData.year_of_study = form.yearOfStudy;
+            roleData.is_verified = false;
+          } else if (form.role === 'landlord') {
+            table = 'landlords';
+            roleData.business_name = form.businessName;
+            roleData.tax_pin = form.taxPin;
+            roleData.bank_account = form.bankAccount;
+            roleData.verification_status = 'pending';
+          } else if (form.role === 'agent') {
+            table = 'agents';
+          } else if (form.role === 'admin') {
+            table = 'admins';
+          }
 
-         if (table) {
-           await supabase.from(table).insert(roleData);
-         }
+          if (table) {
+            const insertPromise = supabase.from(table).insert(roleData);
+            const insertResponse = await withTimeout(
+              30000,
+              insertPromise,
+              'Failed to create profile. Please try again.'
+            );
+            if (insertResponse.error) throw insertResponse.error;
+          }
 
-         setSuccess('Account created! Please check your email to verify.');
-         setTimeout(() => setCurrentPage('login'), 3000);
-       }
-     } catch (err: any) {
-       if (err.message?.includes('already registered')) {
-         setErrors({ email: 'Email already registered' });
-       } else {
-         setErrors({ submit: err.message || 'Signup failed' });
-       }
-     } finally {
-       setLoading(false);
-     }
-   };
+          setSuccess('Account created! Please check your email to verify.');
+          setTimeout(() => setCurrentPage('login'), 3000);
+        }
+      } catch (err: any) {
+        // Log error details for debugging (only in development)
+        if (import.meta.env.DEV) {
+          console.error('Signup error details:', err);
+          if (err.name) console.error('Error name:', err.name);
+          if (err.message) console.error('Error message:', err.message);
+          if (err.stack) console.error('Error stack:', err.stack);
+        }
+
+        if (err.message?.includes('already registered')) {
+          setErrors({ email: 'Email already registered' });
+        } else {
+          setErrors({ submit: err.message || 'Signup failed' });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
