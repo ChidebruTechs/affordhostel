@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Phone, Clock, Check, X, User, MapPin } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 interface Contact {
   type: 'landlord' | 'tenant' | 'neighbor' | 'university_office' | 'student' | 'other';

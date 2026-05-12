@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Hostel, Booking, Notification, WishlistItem, Review, VerificationReport, TeamMember } from '../types';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface CompanyInfo {
   mission: string;

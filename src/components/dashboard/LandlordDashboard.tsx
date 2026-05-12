@@ -8,7 +8,7 @@ import { useApp } from '../../context/AppContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../../../lib/supabase';
 
 interface LandlordDashboardProps {
   initialActiveTab?: string;
