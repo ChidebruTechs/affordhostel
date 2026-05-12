@@ -680,7 +680,7 @@ const LandlordDashboard: React.FC<LandlordDashboardProps> = ({ initialActiveTab 
           <h2 className="text-lg md:text-xl font-semibold text-gray-900">Booking Requests</h2>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">{bookingRequests.length} pending</span>
-            <Button variant="outline" size="sm" onClick={() => fetchBookingRequests(user?.landlordId || '')}>
+            <Button variant="outline" size="sm" onClick={() => fetchBookingRequests(user?.id || '')}>
               Refresh
             </Button>
           </div>

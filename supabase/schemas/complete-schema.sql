@@ -458,18 +458,238 @@ BEGIN
   INSERT INTO public.profiles (id, first_name, last_name, email, phone, role)
   VALUES (
     NEW.id,
-    NEW.raw_user_meta_data->>'first_name',
-    NEW.raw_user_meta_data->>'last_name',
+    NEW.user_metadata->>'first_name',
+    NEW.user_metadata->>'last_name',
     NEW.email,
     NEW.phone,
-    COALESCE(NEW.raw_user_meta_data->>'role', 'student')
-  );
+    COALESCE(NEW.user_metadata->>'role', 'student')
+  ) ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Function to handle user signup with role profile creation
+-- This is called after signUp to create both profile and role-specific data atomically
+-- Uses ON CONFLICT to handle case where handle_new_user trigger already created the profile
+CREATE OR REPLACE FUNCTION public.create_user_profile_with_role(
+  p_user_id UUID,
+  p_first_name TEXT,
+  p_last_name TEXT,
+  p_email TEXT,
+  p_phone TEXT,
+  p_role TEXT,
+  p_university TEXT DEFAULT NULL,
+  p_student_id TEXT DEFAULT NULL,
+  p_course TEXT DEFAULT NULL,
+  p_year_of_study TEXT DEFAULT NULL,
+  p_business_name TEXT DEFAULT NULL,
+  p_tax_pin TEXT DEFAULT NULL,
+  p_bank_account TEXT DEFAULT NULL
+)
+RETURNS VOID AS $$
+BEGIN
+  -- Insert into profiles table (ON CONFLICT handles duplicate from trigger)
+  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role)
+  VALUES (
+    p_user_id,
+    p_first_name,
+    p_last_name,
+    p_email,
+    p_phone,
+    COALESCE(p_role, 'student')
+  ) ON CONFLICT (id) DO NOTHING;
 
+  -- Insert into role-specific table based on role
+  IF p_role = 'student' THEN
+    INSERT INTO public.students (user_id, university, student_id, course, year_of_study, is_verified)
+    VALUES (p_user_id, p_university, p_student_id, p_course, p_year_of_study, false)
+    ON CONFLICT (user_id) DO UPDATE SET
+      university = EXCLUDED.university,
+      student_id = EXCLUDED.student_id,
+      course = EXCLUDED.course,
+      year_of_study = EXCLUDED.year_of_study;
+  ELSIF p_role = 'landlord' THEN
+    INSERT INTO public.landlords (user_id, business_name, tax_pin, bank_account, verification_status)
+    VALUES (p_user_id, p_business_name, p_tax_pin, p_bank_account, 'pending')
+    ON CONFLICT (user_id) DO UPDATE SET
+      business_name = EXCLUDED.business_name,
+      tax_pin = EXCLUDED.tax_pin,
+      bank_account = EXCLUDED.bank_account;
+  ELSIF p_role = 'agent' THEN
+    INSERT INTO public.agents (user_id) VALUES (p_user_id)
+    ON CONFLICT (user_id) DO NOTHING;
+  ELSIF p_role = 'admin' THEN
+    INSERT INTO public.admins (user_id) VALUES (p_user_id)
+    ON CONFLICT (user_id) DO NOTHING;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.create_user_profile_with_role TO authenticated, anon;
+
+-- Trigger to handle profile creation on signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Simple test function to verify RPC works
+CREATE OR REPLACE FUNCTION public.test_rpc()
+RETURNS TEXT AS $$
+BEGIN
+  RETURN 'RPC works';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.test_rpc TO authenticated, anon;
+
+-- SECURITY DEFINER function to insert role-specific profile data
+-- This bypasses RLS since auth.uid() is null during signup (before email verification)
+CREATE OR REPLACE FUNCTION public.insert_student_profile(
+  p_user_id UUID,
+  p_university TEXT,
+  p_student_id TEXT,
+  p_course TEXT,
+  p_year_of_study TEXT
+)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.students (user_id, university, student_id, course, year_of_study, is_verified)
+  VALUES (p_user_id, p_university, p_student_id, p_course, p_year_of_study, false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.insert_student_profile TO authenticated, anon;
+
+-- SECURITY DEFINER function to insert landlord profile data
+CREATE OR REPLACE FUNCTION public.insert_landlord_profile(
+  p_user_id UUID,
+  p_business_name TEXT,
+  p_tax_pin TEXT,
+  p_bank_account TEXT
+)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.landlords (user_id, business_name, tax_pin, bank_account, verification_status)
+  VALUES (p_user_id, p_business_name, p_tax_pin, p_bank_account, 'pending');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.insert_landlord_profile TO authenticated, anon;
+
+-- SECURITY DEFINER function to insert agent profile data
+CREATE OR REPLACE FUNCTION public.insert_agent_profile(
+  p_user_id UUID
+)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.agents (user_id) VALUES (p_user_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.insert_agent_profile TO authenticated, anon;
+
+-- SECURITY DEFINER function to insert admin profile data
+CREATE OR REPLACE FUNCTION public.insert_admin_profile(
+  p_user_id UUID
+)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO public.admins (user_id) VALUES (p_user_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.insert_admin_profile TO authenticated, anon;
+
+-- ============================================
+-- PART 7: SIGNUP COMPLETE RPC FUNCTION
+-- ============================================
+
+-- Function to complete signup and return JSON response
+CREATE OR REPLACE FUNCTION public.signup_complete(
+  p_user_id UUID,
+  p_first_name TEXT,
+  p_last_name TEXT,
+  p_email TEXT,
+  p_phone TEXT,
+  p_role TEXT,
+  p_university TEXT DEFAULT NULL,
+  p_student_id TEXT DEFAULT NULL,
+  p_course TEXT DEFAULT NULL,
+  p_year_of_study TEXT DEFAULT NULL,
+  p_business_name TEXT DEFAULT NULL,
+  p_tax_pin TEXT DEFAULT NULL,
+  p_bank_account TEXT DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  result JSONB;
+BEGIN
+  -- Insert into profiles table first (required for foreign key constraint)
+  -- Note: handle_new_user trigger may have already inserted, so use ON CONFLICT
+  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role)
+  VALUES (
+    p_user_id,
+    p_first_name,
+    p_last_name,
+    p_email,
+    p_phone,
+    COALESCE(p_role, 'student')
+  ) ON CONFLICT (id) DO UPDATE SET
+    first_name = EXCLUDED.first_name,
+    last_name = EXCLUDED.last_name,
+    email = EXCLUDED.email,
+    phone = EXCLUDED.phone,
+    role = EXCLUDED.role;
+
+  -- Insert into role-specific table based on role
+  IF p_role = 'student' THEN
+    INSERT INTO public.students (user_id, university, student_id, course, year_of_study, is_verified)
+    VALUES (p_user_id, p_university, p_student_id, p_course, p_year_of_study, false)
+    ON CONFLICT (user_id) DO UPDATE SET
+      university = EXCLUDED.university,
+      student_id = EXCLUDED.student_id,
+      course = EXCLUDED.course,
+      year_of_study = EXCLUDED.year_of_study;
+  ELSIF p_role = 'landlord' THEN
+    INSERT INTO public.landlords (user_id, business_name, tax_pin, bank_account, verification_status)
+    VALUES (p_user_id, p_business_name, p_tax_pin, p_bank_account, 'pending')
+    ON CONFLICT (user_id) DO UPDATE SET
+      business_name = EXCLUDED.business_name,
+      tax_pin = EXCLUDED.tax_pin,
+      bank_account = EXCLUDED.bank_account;
+  ELSIF p_role = 'agent' THEN
+    INSERT INTO public.agents (user_id) VALUES (p_user_id)
+    ON CONFLICT (user_id) DO NOTHING;
+  ELSIF p_role = 'admin' THEN
+    INSERT INTO public.admins (user_id) VALUES (p_user_id)
+    ON CONFLICT (user_id) DO NOTHING;
+  END IF;
+
+  -- Return success JSON for email notification
+  result := jsonb_build_object(
+    'success', true,
+    'message', 'Signup completed successfully. Please check your email to confirm.',
+    'user_id', p_user_id,
+    'email', p_email,
+    'role', p_role
+  );
+
+  RETURN result;
+
+EXCEPTION WHEN OTHERS THEN
+  -- Return error JSON
+  result := jsonb_build_object(
+    'success', false,
+    'error', SQLERRM,
+    'user_id', p_user_id
+  );
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.signup_complete TO authenticated, anon;
+
+-- ============================================
+-- PART 8: TRIGGERS & FUNCTIONS
+-- ============================================
 
 -- Function to auto-update verification status based on checklist completion
 CREATE OR REPLACE FUNCTION public.update_verification_status()
@@ -514,7 +734,7 @@ CREATE TRIGGER trigger_update_verification_status_checklist
   FOR EACH ROW EXECUTE FUNCTION public.update_verification_status();
 
 -- ============================================
--- PART 8: ROW LEVEL SECURITY POLICIES
+-- PART 9: ROW LEVEL SECURITY POLICIES
 -- ============================================
 
 -- Enable RLS on all tables
@@ -555,27 +775,37 @@ CREATE POLICY "Admins and super_admins can view all profiles" ON public.profiles
 
 -- Students: users can manage own record
 DROP POLICY IF EXISTS "Students can manage own record" ON public.students;
-CREATE POLICY "Students can manage own record" ON public.students FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Students can manage own record" ON public.students
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- Landlords: users can manage own record; admins/agents can manage all
 DROP POLICY IF EXISTS "Landlords can manage own record" ON public.landlords;
-CREATE POLICY "Landlords can manage own record" ON public.landlords FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Landlords can manage own record" ON public.landlords
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Admins and agents can manage landlords" ON public.landlords;
-CREATE POLICY "Admins and agents can manage landlords" ON public.landlords FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
-);
+CREATE POLICY "Admins and agents can manage landlords" ON public.landlords
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
+  ) WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
+  );
 
 -- Agents: users can manage own record; admins can manage all
 DROP POLICY IF EXISTS "Agents can manage own record" ON public.agents;
-CREATE POLICY "Agents can manage own record" ON public.agents FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Agents can manage own record" ON public.agents
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Admins can manage agents" ON public.agents;
-CREATE POLICY "Admins can manage agents" ON public.agents FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "Admins can manage agents" ON public.agents
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  ) WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
 
 -- Admins: users can manage own record
 DROP POLICY IF EXISTS "Admins can manage own record" ON public.admins;
-CREATE POLICY "Admins can manage own record" ON public.admins FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage own record" ON public.admins
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- Hostels: Public can view verified; Owners/Agents can manage
 DROP POLICY IF EXISTS "Verified hostels are viewable by everyone" ON public.hostels;
@@ -762,7 +992,7 @@ CREATE POLICY "Admins and super_admins can manage evidence" ON public.verificati
   );
 
 -- ============================================
--- PART 9: SEED DATA
+-- PART 10: SEED DATA
 -- ============================================
 
 -- Seed standard checklist items
@@ -809,7 +1039,7 @@ INSERT INTO public.company_info (id, mission, vision, updated_at) VALUES
  ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
--- PART 10: STORAGE BUCKET SETUP (Comment: Run separately in Supabase)
+-- PART 11: STORAGE BUCKET SETUP (Comment: Run separately in Supabase)
 -- ============================================
 --
 -- Run these SQL commands separately in Supabase to create storage buckets:

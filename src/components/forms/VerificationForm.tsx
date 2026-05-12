@@ -4,14 +4,16 @@ import { useApp } from '../../context/AppContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../Input';
+import { VerificationChecklist } from './VerificationChecklist';
 
 interface VerificationFormProps {
   hostelId: string;
   onClose: () => void;
+  agentId?: string;
 }
 
-const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }) => {
-  const { hostels, submitVerificationReport } = useApp();
+const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose, agentId }) => {
+  const { hostels, submitVerificationReport, user } = useApp();
   const [verificationData, setVerificationData] = useState({
     comments: '',
     photos: [] as string[],
@@ -19,6 +21,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isChecklistComplete, setIsChecklistComplete] = useState(false);
 
   const hostel = hostels.find(h => h.id === hostelId);
 
@@ -32,6 +35,9 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
       </div>
     );
   }
+
+  // Use the agentId prop, fallback to user id, fallback to mock
+  const effectiveAgentId = agentId || user?.id || 'agent_001';
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -69,7 +75,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!verificationData.comments.trim()) {
       alert('Please provide verification comments');
       return;
@@ -78,22 +84,20 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const verificationReport = {
+      submitVerificationReport(hostelId, {
         id: Date.now().toString(),
         hostelId,
-        agentId: 'agent_001', // Mock agent ID
+        agentId: effectiveAgentId,
         comments: verificationData.comments,
         photos: verificationData.photos,
         status: verificationData.status,
+        documents: [],
         createdAt: new Date(),
         updatedAt: new Date()
-      };
+      });
 
-      submitVerificationReport(hostelId, verificationReport);
-      
       alert(`Verification report submitted successfully! Status: ${verificationData.status}`);
       onClose();
     } catch (error) {
@@ -141,7 +145,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
         {/* Property Overview */}
         <Card className="p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Property Overview</h3>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Property Images */}
             <div>
@@ -155,7 +159,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
                   {activeImageIndex + 1} / {hostel.images.length}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-4 gap-2">
                 {hostel.images.map((image, index) => (
                   <button
@@ -262,11 +266,20 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
           </div>
         </Card>
 
+        {/* Verification Checklist */}
+        <Card className="p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Amenities Verification Checklist</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Verify all amenities listed for this property by making contact verification calls and checking each item.
+          </p>
+          <VerificationChecklist propertyId={hostelId} agentId={effectiveAgentId} onComplete={() => setIsChecklistComplete(true)} />
+        </Card>
+
         {/* Verification Form */}
         <form onSubmit={handleSubmit}>
           <Card className="p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Verification Report</h3>
-            
+
             <div className="space-y-6">
               {/* Status Selection */}
               <div>
@@ -312,7 +325,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
                   onChange={(e) => setVerificationData(prev => ({ ...prev, comments: e.target.value }))}
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
-                  placeholder="Provide detailed comments about the property verification. Include observations about safety, cleanliness, amenities, and any issues found..."
+                  placeholder="Provide detailed verification comments. Include observations about safety, cleanliness, amenities, and any issues found..."
                   required
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -369,33 +382,6 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ hostelId, onClose }
                 <p className="text-sm text-gray-500 mt-1">
                   Upload photos taken during your verification visit to document property condition.
                 </p>
-              </div>
-
-              {/* Verification Checklist */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Verification Checklist</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    'Fire safety equipment present and functional',
-                    'Emergency exits clearly marked and accessible',
-                    'Security measures adequate (guards, CCTV, locks)',
-                    'Electrical systems safe and up to code',
-                    'Plumbing and water systems functional',
-                    'Property clean and well-maintained',
-                    'Amenities as advertised are present',
-                    'Room conditions match photos and descriptions',
-                    'Common areas accessible and clean',
-                    'Compliance with local regulations'
-                  ].map((item, index) => (
-                    <label key={index} className="flex items-start space-x-3">
-                      <input
-                        type="checkbox"
-                        className="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                      />
-                      <span className="text-sm text-gray-700">{item}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
             </div>
           </Card>

@@ -101,13 +101,16 @@ const HostelsPage: React.FC = () => {
   // Get all unique amenities from hostels for filtering
   const allAmenities = [...new Set(hostels.flatMap(hostel => hostel.amenities || []))].sort();
 
-  const filteredHostels = hostels.filter(hostel => {
+const filteredHostels = hostels.filter(hostel => {
+    // Only show verified and available hostels
+    if (hostel.verification_status !== 'verified' || !hostel.available) return false;
+
     const matchesSearch = hostel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         hostel.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         hostel.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+                          hostel.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          hostel.description.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesUniversity = !selectedUniversity || hostel.university === selectedUniversity;
-    
+
     // Enhanced town matching using the CSV data
     let matchesTown = true;
     if (selectedTown) {
@@ -117,13 +120,13 @@ const HostelsPage: React.FC = () => {
       const locationMentionsTown = hostel.location.toLowerCase().includes(selectedTown.toLowerCase());
       matchesTown = hostelUniversityTown === selectedTown || locationMentionsTown;
     }
-    
+
     const matchesPriceRange = (!priceRange.min || hostel.price >= parseInt(priceRange.min)) &&
-                             (!priceRange.max || hostel.price <= parseInt(priceRange.max));
-    
-    const matchesAmenities = selectedAmenities.length === 0 || 
-                            selectedAmenities.every(amenity => (hostel.amenities || []).includes(amenity));
-    
+                              (!priceRange.max || hostel.price <= parseInt(priceRange.max));
+
+    const matchesAmenities = selectedAmenities.length === 0 ||
+                             selectedAmenities.every(amenity => (hostel.amenities || []).includes(amenity));
+
     return matchesSearch && matchesUniversity && matchesTown && matchesPriceRange && matchesAmenities;
   });
 

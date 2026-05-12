@@ -53,7 +53,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       { icon: Users, label: 'User Management', page: 'users' },
       { icon: Building, label: 'Properties', page: 'properties' },
       { icon: BarChart3, label: 'Analytics', page: 'analytics' },
-      { icon: Shield, label: 'Security', page: 'security' },
       { icon: Settings, label: 'Settings', page: 'settings' }
     ]
   };

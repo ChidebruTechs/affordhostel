@@ -514,12 +514,14 @@ const AdminDashboard: React.FC = () => {
 
   const handleResolveAlert = async (alertId: string) => {
     try {
-      const { error } = await supabase
-        .from('system_alerts')
-        .update({ resolved: true })
-        .eq('id', alertId);
-
-      if (error) throw error;
+      // System alerts are mock data - just remove from local state
+      // In a real implementation with a system_alerts table, you would update it here:
+      // const { error } = await supabase
+      //   .from('system_alerts')
+      //   .update({ resolved: true })
+      //   .eq('id', alertId);
+      //
+      // if (error) throw error;
 
       setSystemAlerts(prev => prev.filter(alert => alert.id !== alertId));
     } catch (err: any) {

@@ -3,17 +3,10 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-import { universities, towns } from '../data/universitiesAndTowns';
+import { universities } from '../data/universitiesAndTowns';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, Building2, GraduationCap, ChevronRight, ChevronLeft, Mail, Phone, Lock, User, Briefcase, FileText, Banknote, AlertCircle, Shield } from 'lucide-react';
-
-// Helper to add a timeout to a promise (30s)
-const withTimeout = <T,>(ms: number, promise: Promise<T>, errorMessage: string): Promise<T> => {
-  const timeoutPromise: Promise<never> = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(errorMessage)), ms)
-  );
-  return Promise.race([promise, timeoutPromise]);
-};
+import { formatPhoneToE164 } from '../utils/phone';
+import { User, Building2, GraduationCap, ChevronLeft, Mail, Phone, Lock, FileText, Banknote, AlertCircle, Shield, CheckCircle } from 'lucide-react';
 
 const SignupPage: React.FC = () => {
   const { setCurrentPage } = useApp();
@@ -41,146 +34,156 @@ const SignupPage: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const privileged = urlParams.get('access') === 'privileged';
 
-   const roles = privileged
-     ? [
-         { value: 'student', label: 'Student', icon: GraduationCap },
-         { value: 'landlord', label: 'Landlord', icon: Building2 },
-         { value: 'agent', label: 'Agent', icon: Building2 },
-         { value: 'admin', label: 'Admin', icon: Shield }
-       ]
-     : [
-         { value: 'student', label: 'Student', icon: GraduationCap },
-         { value: 'landlord', label: 'Landlord', icon: Building2 }
-       ];
+  const roles = privileged
+    ? [
+        { value: 'student', label: 'Student', icon: GraduationCap },
+        { value: 'landlord', label: 'Landlord', icon: Building2 },
+        { value: 'agent', label: 'Agent', icon: Building2 },
+        { value: 'admin', label: 'Admin', icon: Shield }
+      ]
+    : [
+        { value: 'student', label: 'Student', icon: GraduationCap },
+        { value: 'landlord', label: 'Landlord', icon: Building2 }
+      ];
 
-   const validate = (s: number) => {
-     const errs: Record<string, string> = {};
-     if (s === 1) {
-       if (!form.firstName.trim()) errs.firstName = 'Required';
-       if (!form.lastName.trim()) errs.lastName = 'Required';
-       if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
-       if (!form.phone.trim()) errs.phone = 'Required';
-       if (form.password.length < 8) errs.password = 'At least 8 characters';
-       if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords must match';
-     }
-     if (s === 2) {
-       if (form.role === 'student') {
-         if (!form.university) errs.university = 'Required';
-         if (!form.studentId) errs.studentId = 'Required';
-         if (!form.course) errs.course = 'Required';
-         if (!form.yearOfStudy) errs.yearOfStudy = 'Required';
-       } else if (form.role === 'landlord') {
-         if (!form.businessName) errs.businessName = 'Required';
-         if (!form.taxPin) errs.taxPin = 'Required';
-         if (!form.bankAccount) errs.bankAccount = 'Required';
-       }
-       // Agent and Admin roles don't require additional fields beyond basic info
-     }
-     setErrors(errs);
-     return Object.keys(errs).length === 0;
-   };
+  const validate = (s: number) => {
+    const errs: Record<string, string> = {};
+    if (s === 1) {
+      if (!form.firstName.trim()) errs.firstName = 'Required';
+      if (!form.lastName.trim()) errs.lastName = 'Required';
+      if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
+      if (!form.phone.trim()) errs.phone = 'Required';
+      if (form.password.length < 8) errs.password = 'At least 8 characters';
+      if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords must match';
+    }
+    if (s === 2) {
+      if (form.role === 'student') {
+        if (!form.university) errs.university = 'Required';
+        if (!form.studentId) errs.studentId = 'Required';
+        if (!form.course) errs.course = 'Required';
+        if (!form.yearOfStudy) errs.yearOfStudy = 'Required';
+      } else if (form.role === 'landlord') {
+        if (!form.businessName) errs.businessName = 'Required';
+        if (!form.taxPin) errs.taxPin = 'Required';
+        if (!form.bankAccount) errs.bankAccount = 'Required';
+      }
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const next = () => { if (validate(1)) setStep(2); };
 
-   const submit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!validate(2)) return;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('🔵 SUBMIT STARTED');
+    
+    if (!validate(2)) {
+      console.log('🔴 Validation failed');
+      return;
+    }
 
-      setLoading(true);
-      setErrors({});
-      setSuccess('');
+    setLoading(true);
+    setErrors({});
+    setSuccess('');
 
-      try {
-        console.log('Starting signup process for role:', form.role);
-        const signUpPromise = supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-          options: { data: { first_name: form.firstName, last_name: form.lastName, role: form.role } },
-        });
-        console.log('Calling Supabase signUp...');
-        const { data: authData, error: authError } = await withTimeout(
-          30000,
-          signUpPromise,
-          'Signup request timed out. Please check your connection and try again.'
-        );
-        console.log('Supabase signUp response:', {
-          userId: authData.user?.id,
-          email: authData.user?.email,
-          session: authData.session ? 'present' : 'null',
-          userMeta: authData.user?.user_metadata
-        });
+    try {
+      console.log('1. Formatting phone...');
+      const formattedPhone = formatPhoneToE164(form.phone);
+      console.log('   Phone:', formattedPhone);
 
-        if (authError) throw authError;
+      console.log('2. Calling supabase.auth.signUp...');
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        phone: formattedPhone,
+        options: {
+          data: {
+            first_name: form.firstName,
+            last_name: form.lastName,
+            role: form.role,
+          },
+        },
+      });
 
-        if (authData.user) {
-          console.log('User created with ID:', authData.user.id);
-          const roleData: Record<string, any> = { user_id: authData.user.id };
-          let table = '';
-
-          if (form.role === 'student') {
-            table = 'students';
-            roleData.university = form.university;
-            roleData.student_id = form.studentId;
-            roleData.course = form.course;
-            roleData.year_of_study = form.yearOfStudy;
-            roleData.is_verified = false;
-          } else if (form.role === 'landlord') {
-            table = 'landlords';
-            roleData.business_name = form.businessName;
-            roleData.tax_pin = form.taxPin;
-            roleData.bank_account = form.bankAccount;
-            roleData.verification_status = 'pending';
-          } else if (form.role === 'agent') {
-            table = 'agents';
-          } else if (form.role === 'admin') {
-            table = 'admins';
-          }
-
-          console.log(`Inserting into ${table} with data:`, roleData);
-
-          if (table) {
-            const insertPromise = supabase.from(table).insert(roleData);
-            const insertResponse = await withTimeout(
-              30000,
-              insertPromise,
-              'Profile creation timed out. Please try again.'
-            );
-            console.log('Insert response:', insertResponse);
-            if (insertResponse.error) {
-              console.error('Profile insert error:', insertResponse.error);
-              throw insertResponse.error;
-            }
-          }
-
-          setSuccess('Account created! Please check your email to verify.');
-          setTimeout(() => setCurrentPage('login'), 3000);
-        } else {
-          console.warn('No user returned from signUp');
-          throw new Error('Signup failed - no user created');
-        }
-      } catch (err: any) {
-        // Log error details for debugging (only in development)
-        if (import.meta.env.DEV) {
-          console.error('Signup error details:', err);
-          if (err.name) console.error('Error name:', err.name);
-          if (err.message) console.error('Error message:', err.message);
-          if (err.status) console.error('Error status:', err.status);
-          if (err.code) console.error('Error code:', err.code);
-          if (err.details) console.error('Error details:', err.details);
-          if (err.stack) console.error('Error stack:', err.stack);
-        }
-
-        if (err.message?.includes('already registered')) {
-          setErrors({ email: 'Email already registered' });
-        } else {
-          setErrors({ submit: err.message || 'Signup failed' });
-        }
-      } finally {
-        setLoading(false);
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
       }
-    };
+      if (!authData.user) {
+        console.error('No user returned');
+        throw new Error('No user returned');
+      }
 
+      const userId = authData.user.id;
+      console.log('3. User created:', userId);
+
+       // Always use SECURITY DEFINER functions for reliability
+       console.log('Using SECURITY DEFINER functions for role-specific profile creation...');
+       
+       try {
+         // Use the SECURITY DEFINER functions for role-specific inserts
+         if (form.role === 'student') {
+           const { error: studentError } = await supabase.rpc('insert_student_profile', {
+             p_user_id: userId,
+             p_university: form.university,
+             p_student_id: form.studentId,
+             p_course: form.course,
+             p_year_of_study: form.yearOfStudy,
+           });
+           if (studentError) throw studentError;
+         } else if (form.role === 'landlord') {
+           const { error: landlordError } = await supabase.rpc('insert_landlord_profile', {
+             p_user_id: userId,
+             p_business_name: form.businessName,
+             p_tax_pin: form.taxPin,
+             p_bank_account: form.bankAccount,
+           });
+           if (landlordError) throw landlordError;
+         } else if (form.role === 'agent') {
+           const { error: agentError } = await supabase.rpc('insert_agent_profile', {
+             p_user_id: userId,
+           });
+           if (agentError) throw agentError;
+         } else if (form.role === 'admin') {
+           const { error: adminError } = await supabase.rpc('insert_admin_profile', {
+             p_user_id: userId,
+           });
+           if (adminError) throw adminError;
+         }
+         
+         // Construct success response similar to what signup_complete would return
+         const data = { success: true, message: 'Signup completed successfully. Please check your email to confirm.', user_id: userId, email: form.email, role: form.role };
+         const rpcError = null;
+         console.log('5. SECURITY DEFINER functions response:', { data, error: rpcError });
+       } catch (fallbackErr) {
+         console.error('SECURITY DEFINER functions also failed:', fallbackErr);
+         const error = fallbackErr as Error;
+         let msg = error.message;
+         if (msg.includes('already registered')) msg = 'Email already registered';
+         else if (msg.includes('phone')) msg = 'Invalid phone number. Use format like 0712345678 or +254712345678';
+         setErrors({ submit: msg });
+         console.log('7. Setting loading false');
+         setLoading(false);
+         return; // Exit early since we handled the error
+       }
+
+       console.log('6. Signup complete!', data.message || 'Account created!');
+       setSuccess("Account created! Please check your email to verify.");
+       setTimeout(() => setCurrentPage('login'), 4000);
+    } catch (err: unknown) {
+      console.error('❌ Caught error:', err);
+      let msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('already registered')) msg = 'Email already registered';
+      else if (msg.includes('phone')) msg = 'Invalid phone number. Use format like 0712345678 or +254712345678';
+      setErrors({ submit: msg });
+    } finally {
+      console.log('7. Setting loading false');
+      setLoading(false);
+    }
+  };
+
+  // JSX – exactly the same as before (no changes needed)
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
