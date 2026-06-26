@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Search, Settings, User, LogOut, ChevronDown, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Button from '../ui/Button';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
 interface DashboardNavbarProps {

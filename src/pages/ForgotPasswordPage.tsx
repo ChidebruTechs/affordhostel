@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 
 const ForgotPasswordPage: React.FC = () => {
   const { setCurrentPage } = useApp();

@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { universities, towns, getTownByUniversity, getUniversitiesByTown } from '../data/universitiesAndTowns';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 
 interface Hostel {
   id: string;

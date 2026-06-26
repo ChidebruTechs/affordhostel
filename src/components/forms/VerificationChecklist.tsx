@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Check, X, Phone, Camera, FileText, Edit, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '@lib/supabase';
 
 interface ChecklistItem {
   id: string;

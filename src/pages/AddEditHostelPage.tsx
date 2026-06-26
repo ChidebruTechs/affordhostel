@@ -5,7 +5,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { universities } from '../data/universitiesAndTowns';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 interface RoomType {

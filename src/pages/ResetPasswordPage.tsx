@@ -4,7 +4,7 @@ import { ArrowLeft, Lock, CheckCircle, AlertCircle, KeyRound } from 'lucide-reac
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();

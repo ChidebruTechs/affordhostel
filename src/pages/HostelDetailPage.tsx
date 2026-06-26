@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import CheckoutPage from './CheckoutPage';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface RoomType {

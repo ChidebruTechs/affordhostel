@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { Mail, GraduationCap, Building2, Shield, AlertCircle } from 'lucide-react';
 import type { User } from '../types';
 

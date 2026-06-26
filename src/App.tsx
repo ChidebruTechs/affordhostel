@@ -32,7 +32,7 @@ import VerificationProcessPage from './pages/VerificationProcessPage';
 import PricingPlansPage from './pages/PricingPlansPage';
 import Card from './components/ui/Card';
 import Button from './components/ui/Button';
-import { supabase } from './lib/supabase';
+import { supabase } from '@lib/supabase';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ 

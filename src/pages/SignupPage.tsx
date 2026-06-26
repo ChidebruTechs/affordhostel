@@ -4,7 +4,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { universities } from '../data/universitiesAndTowns';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@lib/supabase';
 import { formatPhoneToE164 } from '../utils/phone';
 import { User, Building2, GraduationCap, ChevronLeft, Mail, Phone, Lock, FileText, Banknote, AlertCircle, Shield, CheckCircle } from 'lucide-react';
 
@@ -74,7 +74,7 @@ const SignupPage: React.FC = () => {
 
   const next = () => { if (validate(1)) setStep(2); };
 
-  const submit = async (e: React.FormEvent) => {
+const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🔵 SUBMIT STARTED');
     
@@ -118,59 +118,37 @@ const SignupPage: React.FC = () => {
       const userId = authData.user.id;
       console.log('3. User created:', userId);
 
-       // Always use SECURITY DEFINER functions for reliability
-       console.log('Using SECURITY DEFINER functions for role-specific profile creation...');
-       
-       try {
-         // Use the SECURITY DEFINER functions for role-specific inserts
-         if (form.role === 'student') {
-           const { error: studentError } = await supabase.rpc('insert_student_profile', {
-             p_user_id: userId,
-             p_university: form.university,
-             p_student_id: form.studentId,
-             p_course: form.course,
-             p_year_of_study: form.yearOfStudy,
-           });
-           if (studentError) throw studentError;
-         } else if (form.role === 'landlord') {
-           const { error: landlordError } = await supabase.rpc('insert_landlord_profile', {
-             p_user_id: userId,
-             p_business_name: form.businessName,
-             p_tax_pin: form.taxPin,
-             p_bank_account: form.bankAccount,
-           });
-           if (landlordError) throw landlordError;
-         } else if (form.role === 'agent') {
-           const { error: agentError } = await supabase.rpc('insert_agent_profile', {
-             p_user_id: userId,
-           });
-           if (agentError) throw agentError;
-         } else if (form.role === 'admin') {
-           const { error: adminError } = await supabase.rpc('insert_admin_profile', {
-             p_user_id: userId,
-           });
-           if (adminError) throw adminError;
-         }
-         
-         // Construct success response similar to what signup_complete would return
-         const data = { success: true, message: 'Signup completed successfully. Please check your email to confirm.', user_id: userId, email: form.email, role: form.role };
-         const rpcError = null;
-         console.log('5. SECURITY DEFINER functions response:', { data, error: rpcError });
-       } catch (fallbackErr) {
-         console.error('SECURITY DEFINER functions also failed:', fallbackErr);
-         const error = fallbackErr as Error;
-         let msg = error.message;
-         if (msg.includes('already registered')) msg = 'Email already registered';
-         else if (msg.includes('phone')) msg = 'Invalid phone number. Use format like 0712345678 or +254712345678';
-         setErrors({ submit: msg });
-         console.log('7. Setting loading false');
-         setLoading(false);
-         return; // Exit early since we handled the error
-       }
+      console.log('4. Calling signup_complete RPC...');
+      const rpcParams: Record<string, unknown> = {
+        p_user_id: userId,
+        p_first_name: form.firstName,
+        p_last_name: form.lastName,
+        p_email: form.email,
+        p_phone: formattedPhone,
+        p_role: form.role,
+      };
 
-       console.log('6. Signup complete!', data.message || 'Account created!');
-       setSuccess("Account created! Please check your email to verify.");
-       setTimeout(() => setCurrentPage('login'), 4000);
+      if (form.role === 'student') {
+        rpcParams.p_university = form.university;
+        rpcParams.p_student_id = form.studentId;
+        rpcParams.p_course = form.course;
+        rpcParams.p_year_of_study = form.yearOfStudy;
+      } else if (form.role === 'landlord') {
+        rpcParams.p_business_name = form.businessName;
+        rpcParams.p_tax_pin = form.taxPin;
+        rpcParams.p_bank_account = form.bankAccount;
+      }
+
+      const { data, error: rpcError } = await supabase.rpc('signup_complete', rpcParams);
+
+      if (rpcError) {
+        console.error('RPC error:', rpcError);
+        throw rpcError;
+      }
+
+      console.log('5. Signup complete!', data?.message || 'Account created!');
+      setSuccess("Account created! Please check your email to verify.");
+      setTimeout(() => setCurrentPage('login'), 4000);
     } catch (err: unknown) {
       console.error('❌ Caught error:', err);
       let msg = err instanceof Error ? err.message : String(err);
@@ -178,7 +156,7 @@ const SignupPage: React.FC = () => {
       else if (msg.includes('phone')) msg = 'Invalid phone number. Use format like 0712345678 or +254712345678';
       setErrors({ submit: msg });
     } finally {
-      console.log('7. Setting loading false');
+      console.log('6. Setting loading false');
       setLoading(false);
     }
   };
